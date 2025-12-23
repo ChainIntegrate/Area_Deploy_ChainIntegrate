@@ -1,3 +1,5 @@
+/// @dev Prototype – not for production use
+
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.22;
 
