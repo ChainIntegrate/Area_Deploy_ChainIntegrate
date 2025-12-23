@@ -116,7 +116,7 @@ contract ComplianceCertificateLSP8 is LSP8IdentifiableDigitalAsset, LSP8Burnable
     constructor(address newOwner_)
         LSP8IdentifiableDigitalAsset(
             "ComplianceCertificateLSP8",
-            "VCERT",
+            "CCERT",
             newOwner_,
             0,
             0
