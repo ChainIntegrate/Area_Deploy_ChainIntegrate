@@ -50,8 +50,7 @@ Dettagli di deploy e verifica: vedi `DEPLOYMENT.md`.
 - **OLD_Traceability_test1**  
   Primo prototipo sperimentale.  
   Abbandonato in fase iniziale a seguito di criticità progettuali.  
-  Non è considerato parte del modello attuale e potrebbe non essere mai stato deployato.
-
+  Non è considerato parte del modello attuale.
 Questi contratti sono mantenuti nel repository **a scopo storico e di confronto**, non per uso operativo.
 
 ---
