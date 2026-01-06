@@ -51,6 +51,7 @@ Dettagli di deploy e verifica: vedi `DEPLOYMENT.md`.
   Primo prototipo sperimentale.  
   Abbandonato in fase iniziale a seguito di criticità progettuali.  
   Non è considerato parte del modello attuale.
+  
 Questi contratti sono mantenuti nel repository **a scopo storico e di confronto**, non per uso operativo.
 
 ---
