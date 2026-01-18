@@ -1,4 +1,5 @@
 ## LUKSO Testnet
+## LUKSO Testnet
 
 ### Compliance Certificates
 
@@ -20,3 +21,24 @@
   - `Revoked` is terminal (cannot transition to any other state)
   - Superseding allowed only from `Valid → Superseded`
   - LSP4 / ERC725Y contract metadata has independent global freeze
+
+---
+
+### Battery Carbon Certificates
+
+**REV1**
+- Contract: `BatteryCarbonCertificateLSP8`
+- Address: `0xA0EB23c4e8c08f6d497FD8B80fF9CC9B91452E0A`
+- ChainId: `4201`
+- Verified: ✅ (Standard JSON Input)
+- Deployed: `2026-01-18`
+- Owner (Admin): Universal Profile  
+  `0x83cBE526D949A3AaaB4EF9a03E48dd862e81472C`
+- Notes:
+  - LSP8 Identifiable Digital Asset
+  - `tokenId = keccak256(lotCode)`
+  - Certificate issuance restricted via **issuer allowlist**
+  - Allowlist managed exclusively by contract owner (UP) via `UP.execute`
+  - Separation between:
+    - contract governance (allowlist)
+    - certificate ownership (issuer / holder)
