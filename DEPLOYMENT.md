@@ -1,5 +1,4 @@
 ## LUKSO Testnet
-## LUKSO Testnet
 
 ### Compliance Certificates
 
