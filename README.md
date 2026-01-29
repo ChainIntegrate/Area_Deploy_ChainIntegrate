@@ -1,14 +1,15 @@
-# Compliance Certificates – LUKSO
+# Compliance & Traceability Assets – LUKSO
 
-Repository di sviluppo per smart contract e test legati alla **certificazione di conformità e tracciabilità su blockchain LUKSO**.
+Repository di sviluppo per smart contract e test legati a **certificazione, tracciabilità e valutazione qualitativa** su blockchain **LUKSO**.
 
 Il progetto utilizza gli standard **LSP (LUKSO Standard Proposals)** e segue un approccio incrementale:  
-ogni contratto rappresenta un’evoluzione controllata del modello di certificazione, con particolare attenzione a:
+ogni contratto rappresenta un’evoluzione controllata di modelli on-chain orientati a:
 
 - governance
 - auditabilità
-- privacy
+- privacy by design
 - separazione dei ruoli
+- integrazione con sistemi off-chain
 
 ---
 
@@ -16,23 +17,24 @@ ogni contratto rappresenta un’evoluzione controllata del modello di certificaz
 
 Fornire una base tecnica per:
 
-- emettere certificati come asset digitali identificabili
-- verificare l’autenticità dei documenti associati
-- gestire revoche e sostituzioni
-- limitare l’esposizione dei dati on-chain
-- separare chiaramente **governance**, **emissione** e **detenzione** dei certificati
+- emettere certificati come **asset digitali identificabili**
+- verificare autenticità, stato e validità dei certificati
+- gestire **revoche, sostituzioni e versionamento**
+- rappresentare **valutazioni qualitative strutturate**
+- limitare l’esposizione dei dati sensibili on-chain
+- separare chiaramente **governance**, **emissione** e **detenzione**
 
-La blockchain viene usata come **registro di verifica**, non come database.
+La blockchain viene utilizzata come **registro di verifica e audit**, non come database applicativo.
 
 ---
 
 ## Approccio
 
-- Smart contract **LSP8** per rappresentare certificati
+- Smart contract **LSP8 (Identifiable Digital Asset)**
 - Stato e timeline on-chain
-- Dati identificativi salvati solo come hash
-- Hash dei documenti per antifalsificazione
-- Logica applicativa e dati in chiaro gestiti off-chain
+- Identità e dati sensibili gestiti **off-chain**
+- Riferimenti on-chain tramite **hash crittografici**
+- Logica applicativa e UI off-chain
 - Governance basata su **Universal Profile (UP)**
 
 ---
@@ -47,7 +49,7 @@ La blockchain viene usata come **registro di verifica**, non come database.
 
 - **ComplianceCertificateLSP8REV2**
 
-Contratto di riferimento per l’uso operativo nel dominio della certificazione di conformità.
+Contratto di riferimento per l’uso operativo nel dominio della **certificazione di conformità**.
 
 Introduce:
 - freeze dei metadati **per singolo token**
@@ -100,13 +102,43 @@ Questo consente di separare in modo netto:
 - **soggetti autorizzati all’emissione**
 - **detentori finali dei certificati**
 
-L’issuer può essere:
-- un Universal Profile
-- un EOA
-
-La governance non dipende dal wallet che firma, ma dal controllo dell’UP.
-
 Dettagli di deploy e verifica: vedi `DEPLOYMENT.md`.
+
+---
+
+## Supplier Quality Evaluations
+
+### Contratto operativo
+
+- **SupplierQualityLSP8**
+
+Contratto LSP8 dedicato alla **valutazione qualitativa periodica dei fornitori**.
+
+Caratteristiche principali:
+- 1 token = 1 fornitore
+- `tokenId = keccak256("SUP:" + supplierRef)`
+- valutazioni **append-only** (es. semestrali)
+- punteggi strutturati su più criteri:
+  - puntualità
+  - qualità
+  - documentazione
+  - reattività
+- calcolo on-chain di:
+  - ultimo punteggio
+  - media storica
+- identità del fornitore risolta **off-chain** tramite hash mapping
+- nessun dato sensibile in chiaro on-chain
+
+### Ruoli e governance
+
+- **Owner (UP)**: amministrazione del contratto
+- **Quality Office**: mint dei fornitori e inserimento valutazioni
+- **Fornitori**: detentori dei token (read-only)
+
+Il contratto è progettato per integrazione diretta con UI di verifica e dashboard di audit.
+
+Dettagli di deploy e verifica: vedi `DEPLOYMENT.md`.  
+Schema dati e scelte architetturali: vedi `contract_spec.md`.
 
 ---
 
@@ -132,10 +164,11 @@ Questi contratti sono mantenuti **a scopo storico e di confronto**, non per uso 
 
 ## Stato del progetto
 
-- ✔️ Contratto Compliance REV2 deployato e verificato su LUKSO Testnet
-- ✔️ Contratto Battery Carbon Certificate deployato e verificato su LUKSO Testnet
-- ✔️ Modello di governance basato su Universal Profile
-- ✔️ Emissione controllata tramite allowlist on-chain
+- ✔️ Compliance Certificates REV2 deployato e verificato su LUKSO Testnet
+- ✔️ Battery Carbon Certificate deployato e verificato su LUKSO Testnet
+- ✔️ Supplier Quality Evaluations deployato e verificato su LUKSO Testnet
+- ✔️ Governance basata su Universal Profile
+- ✔️ Emissione controllata tramite allowlist / ruoli
 - ✔️ Architettura orientata a privacy, auditabilità e antifalsificazione
 - ✔️ Base pronta per integrazione UI e sistemi aziendali
 
@@ -148,6 +181,7 @@ contracts/
   ComplianceCertificate_Rev2.sol
   ComplianceCertificateLSP8.sol
   BatteryCarbonCertificateLSP8.sol
+  SupplierQualityLSP8.sol
   Traceability_test2.sol
   OLD_Traceability_test1.sol
 
@@ -155,7 +189,9 @@ scripts/
   deploy_ComplianceCertificateLSP8.js
   deploy-rev2.js
   deploy_battery_allowlist_testnet.js
-  allow_issuer_via_up_execute.js // script per il set di allow di BatteryCarbonCertificate
+  deploySupplierQualityLSP8.js
+  allow_issuer_via_up_execute.js
 
 DEPLOYMENT.md
+contract_spec.md
 README.md
