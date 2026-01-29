@@ -41,3 +41,27 @@
   - Separation between:
     - contract governance (allowlist)
     - certificate ownership (issuer / holder)
+
+---
+
+### Supplier Quality Evaluations
+
+**REV1**
+- Contract: `SupplierQualityLSP8`
+- Address: `0xf1b7213a37ae37adf27968589BBde72DA3B9874D`
+- ChainId: `4201`
+- Verified: ✅ (Standard JSON Input)
+- Deployed: `2026-01-29`
+- Owner (Admin): Universal Profile  
+  `0x83cBE526D949A3AaaB4EF9a03E48dd862e81472C`
+- Quality Office:  
+  `0xAa18E265Bb38cD507eD018AF9abf0FeF16E685C9`
+- Notes:
+  - LSP8 Identifiable Digital Asset
+  - One token per supplier
+  - `tokenId = keccak256("SUP:" + supplierRef)`
+  - Evaluations are **append-only** (periodic, e.g. semestral)
+  - Weighted scoring (punctuality, quality, documentation, reactivity)
+  - On-chain aggregated stats (`currentOverall`, historical average)
+  - Supplier identity resolved **off-chain** via hash mapping
+  - Minting and evaluation restricted to **Quality Office**
