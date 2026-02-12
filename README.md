@@ -142,23 +142,38 @@ Schema dati e scelte architetturali: vedi `contract_spec.md`.
 
 ---
 
-## Test e prototipi
+---
 
-- **Traceability_test2**
+## Traceability & Conformity Evolution
 
-Iterazione di test del modello di tracciabilità e certificazione.  
-Utilizzato per validare:
-- struttura dei dati
-- gestione dello stato
-- meccanismi di revoca e supersessione
+### Traceability_test2
 
-- **OLD_Traceability_test1**
+Iterazione architetturale avanzata del modello di certificazione e tracciabilità.
 
-Primo prototipo sperimentale.  
-Abbandonato in fase iniziale a seguito di criticità progettuali.  
-Non fa parte del modello attuale.
+Non è un semplice prototipo sperimentale, ma una revisione strutturata che ha introdotto:
 
-Questi contratti sono mantenuti **a scopo storico e di confronto**, non per uso operativo.
+- gestione esplicita dello stato (`Valid / Revoked / Superseded`)
+- grafo bidirezionale di supersessione
+- separazione tra:
+  - freeze dei dati di conformità
+  - freeze dei metadata LSP4 / ERC725Y
+- governance tramite Universal Profile
+
+Il contratto è stato utilizzato per consolidare il modello lifecycle prima della standardizzazione definitiva nel dominio Compliance.
+
+Dettagli di deploy e verifica: vedi `DEPLOYMENT.md`.  
+Schema dati e scelte architetturali: vedi `Traceability_test2_spec.md`.
+
+---
+
+### OLD_Traceability_test1
+
+Primo prototipo esplorativo del modello di tracciabilità.
+
+Abbandonato in fase iniziale a seguito di criticità progettuali e ripensamento architetturale.
+
+Mantenuto esclusivamente a scopo storico e comparativo.
+
 
 ---
 
