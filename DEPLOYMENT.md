@@ -65,3 +65,39 @@
   - On-chain aggregated stats (`currentOverall`, historical average)
   - Supplier identity resolved **off-chain** via hash mapping
   - Minting and evaluation restricted to **Quality Office**
+
+  ---
+
+### Traceability / Conformity Certificates
+
+**REV2**
+- Contract: `Traceability_test2`
+- Address: `0xbF8bc6982326fEA71e9A0f4891893B153F0Eb1a8`
+- ChainId: `4201` (LUKSO Testnet)
+- Verified: ✅ (Blockscout — Standard JSON Input)
+- Deployed: `2025-12-16`
+- Deploy block: `6637857`
+- Deploy tx: `0x70fc91b912ff27b0bbcc4343fae5ed68a3e5c44690fa365054c9aca9ac5dcf7e`
+- Owner (Admin): Universal Profile  
+  `0x83cBE526D949A3AaaB4EF9a03E48dd862e81472C`
+- Notes:
+  - LSP8 Identifiable Digital Asset + Burnable extension
+  - `mintCert()` restricted to contract owner (UP governance)
+  - One token = one conformity certificate
+  - Conformity data stored fully on-chain (`setConformityData`)
+  - Certificate lifecycle:
+    - `Valid`
+    - `Revoked`
+    - `Superseded`
+  - Explicit superseding graph:
+    - `oldTokenId → newTokenId`
+    - Bidirectional lookup (`supersededBy`, `supersedes`)
+  - Dual freeze model:
+    - `freezeConformity()` → locks conformity + status transitions
+    - `freezeMetadata()` → locks LSP4 / ERC725Y metadata
+  - Governance and data lifecycle separated from metadata lifecycle
+**REV1**
+- Internal prototype (short-lived, replaced by REV2)
+
+
+
