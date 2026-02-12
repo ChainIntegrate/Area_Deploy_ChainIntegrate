@@ -96,6 +96,7 @@
     - `freezeConformity()` → locks conformity + status transitions
     - `freezeMetadata()` → locks LSP4 / ERC725Y metadata
   - Governance and data lifecycle separated from metadata lifecycle
+  
 **REV1**
 - Internal prototype (short-lived, replaced by REV2)
 
