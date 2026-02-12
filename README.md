@@ -142,8 +142,6 @@ Schema dati e scelte architetturali: vedi `contract_spec.md`.
 
 ---
 
----
-
 ## Traceability & Conformity Evolution
 
 ### Traceability_test2
