@@ -25,6 +25,45 @@
 
 ### Battery Carbon Certificates
 
+**REV2 (current)**
+- Contract: `BatteryCarbonCertificateLSP8_Rev2`
+- Address: `0xE0F24982fA686fEAD94f6b32C532B545c3cEB6CC`
+- ChainId: `4201`
+- Verified: ✅ (Standard JSON Input)
+- Deployed: `2026-02-22`
+- Owner (Admin): Universal Profile  
+  `0x83cBE526D949A3AaaB4EF9a03E48dd862e81472C`
+- Notes:
+  - LSP8 Identifiable Digital Asset
+  - `tokenId = keccak256(lotCode)`
+  - Multi-actor contribution model (`CAM`, `CELLS`, `LOGISTICS`)
+  - Contribution flow based on:
+    - **JSON off-chain (URI)**
+    - **digest (`bytes32`) on-chain**
+  - Signature ECDSA **removed by design (Rev2)**
+    - Authentication via Universal Profile
+    - Authorization via `actorByRole`
+    - Non-repudiation via blockchain transaction (`msg.sender`)
+    - Integrity via digest
+  - Contribution submission restricted to authorized actor per role
+  - Per-role contribution freeze (`freezeContribution`)
+  - Certificate freeze requires:
+    - all contributions frozen
+    - aggregate present
+  - Aggregate structure:
+    - `aggregateURI`
+    - `aggregateDigest`
+  - Separation between:
+    - governance (issuer allowlist via UP)
+    - operational roles (actors per token)
+    - data layer (off-chain JSON)
+  - Designed for:
+    - simplified UX
+    - real-world integration
+    - reduced operational complexity vs Rev1
+
+---
+
 **REV1**
 - Contract: `BatteryCarbonCertificateLSP8`
 - Address: `0xA0EB23c4e8c08f6d497FD8B80fF9CC9B91452E0A`
@@ -38,33 +77,19 @@
   - `tokenId = keccak256(lotCode)`
   - Certificate issuance restricted via **issuer allowlist**
   - Allowlist managed exclusively by contract owner (UP) via `UP.execute`
-  - Separation between:
-    - contract governance (allowlist)
-    - certificate ownership (issuer / holder)
-
----
-
-### Supplier Quality Evaluations
-
-**REV1**
-- Contract: `SupplierQualityLSP8`
-- Address: `0xf1b7213a37ae37adf27968589BBde72DA3B9874D`
-- ChainId: `4201`
-- Verified: ✅ (Standard JSON Input)
-- Deployed: `2026-01-29`
-- Owner (Admin): Universal Profile  
-  `0x83cBE526D949A3AaaB4EF9a03E48dd862e81472C`
-- Quality Office:  
-  `0xAa18E265Bb38cD507eD018AF9abf0FeF16E685C9`
-- Notes:
-  - LSP8 Identifiable Digital Asset
-  - One token per supplier
-  - `tokenId = keccak256("SUP:" + supplierRef)`
-  - Evaluations are **append-only** (periodic, e.g. semestral)
-  - Weighted scoring (punctuality, quality, documentation, reactivity)
-  - On-chain aggregated stats (`currentOverall`, historical average)
-  - Supplier identity resolved **off-chain** via hash mapping
-  - Minting and evaluation restricted to **Quality Office**
+  - Multi-actor contribution model
+  - Contribution included:
+    - digest (`bytes32`)
+    - URI (off-chain)
+    - **ECDSA signature (payload-level)**
+  - On-chain signature verification:
+    - binding between actor, content, and context
+  - Higher complexity due to:
+    - payload signing
+    - signature validation
+    - client-side cryptographic handling
+  - Model designed for stronger payload-level non-repudiation
+  - Superseded by Rev2 due to architectural redundancy of signature layer
 
   ---
 
