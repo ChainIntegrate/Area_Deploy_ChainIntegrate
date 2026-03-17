@@ -42,6 +42,34 @@ La blockchain viene utilizzata come **registro di verifica e audit**, non come d
 ## Contratti nel repository
 
 ---
+### VehiclePassport
+
+Sistema di certificazione digitale del veicolo basato su standard LUKSO (LSP8).
+
+Non è un semplice NFT descrittivo, ma un modello strutturato di identità e storico del veicolo che introduce:
+
+- identificazione univoca tramite VIN hashato (`tokenId`)
+- metadata originari del veicolo gestiti via URI + hash, con possibilità di freeze
+- separazione tra:
+  - dati originari del veicolo (issuer-controlled)
+  - record operativi append-only (operator-controlled)
+- sistema di autorizzazioni dinamiche per la scrittura dei record:
+  - `OneShot` (una singola operazione)
+  - `Reusable` (più operazioni nel tempo)
+- invalidazione automatica delle autorizzazioni tramite `vehicleAuthorizationEpoch` al cambio proprietario
+- creazione di record immutabili per ogni intervento:
+  - con categoria (es. MechanicalRepair, BodyRepair, ecc.)
+  - causa (es. Accident, Wear, Routine, ecc.)
+- generazione automatica del record di passaggio proprietà (`OwnershipTransfer`)
+- modello ibrido on-chain / off-chain:
+  - on-chain: integrità, stato, relazioni
+  - off-chain: contenuto dettagliato (JSON, documenti, media)
+- compatibilità con:
+  - Universal Profile (esperienza avanzata)
+  - wallet standard EOA (interoperabilità)
+
+Costituisce la base per un "libretto digitale del veicolo" verificabile, estendibile e interoperabile.
+
 
 ## Compliance Certificates
 
@@ -197,6 +225,7 @@ contracts/
   SupplierQualityLSP8.sol
   Traceability_test2.sol
   OLD_Traceability_test1.sol
+  VehiclePassport.sol
 
 scripts/
   deploy_ComplianceCertificateLSP8.js
