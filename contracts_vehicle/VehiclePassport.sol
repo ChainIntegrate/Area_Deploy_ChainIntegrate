@@ -22,8 +22,8 @@ import { _LSP4_TOKEN_TYPE_COLLECTION } from "@lukso/lsp4-contracts/contracts/LSP
  *
  * Nota:
  * - il contratto non assume che il proprietario sia una Universal Profile
- * - owner/operator/issuer sono semplicemente address
- * - quindi i token possono stare sia su UP sia su wallet normali
+ * - owner / operator / issuer sono semplicemente address
+ * - i token possono quindi stare sia su UP sia su wallet normali
  */
 contract VehiclePassportRegistry is LSP8IdentifiableDigitalAsset {
     // =========================================================
@@ -128,6 +128,16 @@ contract VehiclePassportRegistry is LSP8IdentifiableDigitalAsset {
         bool systemGenerated;
     }
 
+    struct CreateServiceRecordInput {
+        uint64 workStartedAt;
+        uint64 workCompletedAt;
+        uint32 odometerKm;
+        string recordURI;
+        bytes32 recordHash;
+        RecordCause cause;
+        uint256 supersedesRecordId;
+    }
+
     // =========================================================
     // STORAGE
     // =========================================================
@@ -138,11 +148,11 @@ contract VehiclePassportRegistry is LSP8IdentifiableDigitalAsset {
     mapping(bytes32 => OriginMetadataControl) public originMetadataControls;
 
     uint256 public nextAuthorizationId = 1;
-    mapping(uint256 => WriteAuthorization) public authorizations;
+    mapping(uint256 => WriteAuthorization) private authorizations;
     mapping(bytes32 => uint256[]) private authorizationIdsByVehicle;
 
     uint256 public nextRecordId = 1;
-    mapping(uint256 => ServiceRecord) public records;
+    mapping(uint256 => ServiceRecord) private records;
     mapping(bytes32 => uint256[]) private recordIdsByVehicle;
 
     mapping(bytes32 => uint256) public vehicleAuthorizationEpoch;
@@ -500,80 +510,33 @@ contract VehiclePassportRegistry is LSP8IdentifiableDigitalAsset {
     /**
      * Opzione A:
      * - il record nasce gia' completo e frozen
-     * - workStartedAt e workCompletedAt arrivano entrambi in input
+     * - l'operatore lo crea a fine lavoro
      * - autorizzazione OneShot consumata alla creazione
      */
     function createServiceRecord(
         uint256 authorizationId,
-        uint64 workStartedAt,
-        uint64 workCompletedAt,
-        uint32 odometerKm,
-        string calldata recordURI,
-        bytes32 recordHash,
-        RecordCause cause,
-        uint256 supersedesRecordId
+        CreateServiceRecordInput calldata input
     ) external returns (uint256 recordId) {
         WriteAuthorization storage auth = authorizations[authorizationId];
 
-        if (auth.authorizationId == 0) revert AuthorizationNotFound();
-        if (!auth.active) revert AuthorizationInactive();
-        if (auth.operator != msg.sender) revert AuthorizationWrongOperator();
-        if (vehicleAuthorizationEpoch[auth.tokenId] != auth.epoch) revert AuthorizationWrongEpoch();
-        if (tokenOwnerOf(auth.tokenId) != auth.grantedBy) revert AuthorizationOwnerMismatch();
+        _validateAuthorizationForRecord(auth);
 
-        if (auth.validFrom != 0 && block.timestamp < auth.validFrom) {
-            revert AuthorizationNotStarted();
-        }
+        _validateRecordInput(
+            auth.tokenId,
+            input.workStartedAt,
+            input.workCompletedAt,
+            input.supersedesRecordId
+        );
 
-        if (auth.validUntil != 0 && block.timestamp > auth.validUntil) {
-            revert AuthorizationExpired();
-        }
+        _consumeAuthorizationIfNeeded(auth);
 
-        if (auth.category == RecordCategory.OwnershipTransfer) {
-            revert OwnershipTransferManualRecordForbidden();
-        }
-
-        if (workStartedAt == 0 || workCompletedAt < workStartedAt) {
-            revert InvalidWorkDates();
-        }
-
-        if (workCompletedAt > block.timestamp) {
-            revert WorkCompletionInFuture();
-        }
-
-        if (supersedesRecordId != 0) {
-            if (!records[supersedesRecordId].exists) revert SupersededRecordNotFound();
-            if (records[supersedesRecordId].tokenId != auth.tokenId) {
-                revert SupersededRecordWrongVehicle();
-            }
-        }
-
-        if (auth.mode == AuthorizationMode.OneShot) {
-            auth.active = false;
-        }
-
-        recordId = nextRecordId++;
-
-        records[recordId] = ServiceRecord({
-            exists: true,
-            recordId: recordId,
-            tokenId: auth.tokenId,
-            authorizationId: authorizationId,
-            category: auth.category,
-            cause: cause,
-            writer: msg.sender,
-            createdAt: uint64(block.timestamp),
-            workStartedAt: workStartedAt,
-            workCompletedAt: workCompletedAt,
-            odometerKm: odometerKm,
-            recordURI: recordURI,
-            recordHash: recordHash,
-            frozen: true,
-            supersedesRecordId: supersedesRecordId,
-            systemGenerated: false
-        });
-
-        recordIdsByVehicle[auth.tokenId].push(recordId);
+        recordId = _storeServiceRecord(
+            auth.tokenId,
+            authorizationId,
+            auth.category,
+            msg.sender,
+            input
+        );
 
         emit ServiceRecordCreated(
             recordId,
@@ -581,12 +544,12 @@ contract VehiclePassportRegistry is LSP8IdentifiableDigitalAsset {
             authorizationId,
             msg.sender,
             auth.category,
-            cause
+            input.cause
         );
     }
 
     // =========================================================
-    // VIEWS
+    // VIEWS - PASSPORT / METADATA
     // =========================================================
 
     function getOriginMetadata(bytes32 tokenId)
@@ -612,6 +575,14 @@ contract VehiclePassportRegistry is LSP8IdentifiableDigitalAsset {
         updatedAt = control.updatedAt;
     }
 
+    function getCurrentOwner(bytes32 tokenId)
+        external
+        view
+        returns (address)
+    {
+        return tokenOwnerOf(tokenId);
+    }
+
     function getAuthorizationIdsByVehicle(bytes32 tokenId)
         external
         view
@@ -628,16 +599,100 @@ contract VehiclePassportRegistry is LSP8IdentifiableDigitalAsset {
         return recordIdsByVehicle[tokenId];
     }
 
-    function getCurrentOwner(bytes32 tokenId)
+    // =========================================================
+    // VIEWS - AUTHORIZATIONS
+    // =========================================================
+
+    function getAuthorization(uint256 authorizationId)
         external
         view
-        returns (address)
+        returns (
+            bool active,
+            uint256 authId,
+            bytes32 tokenId,
+            address grantedBy,
+            address operator,
+            RecordCategory category,
+            AuthorizationMode mode,
+            uint64 validFrom,
+            uint64 validUntil,
+            uint256 epoch
+        )
     {
-        return tokenOwnerOf(tokenId);
+        WriteAuthorization memory auth = authorizations[authorizationId];
+
+        return (
+            auth.active,
+            auth.authorizationId,
+            auth.tokenId,
+            auth.grantedBy,
+            auth.operator,
+            auth.category,
+            auth.mode,
+            auth.validFrom,
+            auth.validUntil,
+            auth.epoch
+        );
     }
 
     // =========================================================
-    // INTERNALS
+    // VIEWS - RECORDS
+    // =========================================================
+
+    function getRecordHeader(uint256 recordId)
+        external
+        view
+        returns (
+            bool exists,
+            uint256 id,
+            bytes32 tokenId,
+            uint256 authorizationId,
+            RecordCategory category,
+            RecordCause cause,
+            address writer,
+            uint64 createdAt,
+            uint64 workStartedAt,
+            uint64 workCompletedAt,
+            uint32 odometerKm,
+            bool frozen,
+            uint256 supersedesRecordId,
+            bool systemGenerated
+        )
+    {
+        ServiceRecord memory rec = records[recordId];
+
+        return (
+            rec.exists,
+            rec.recordId,
+            rec.tokenId,
+            rec.authorizationId,
+            rec.category,
+            rec.cause,
+            rec.writer,
+            rec.createdAt,
+            rec.workStartedAt,
+            rec.workCompletedAt,
+            rec.odometerKm,
+            rec.frozen,
+            rec.supersedesRecordId,
+            rec.systemGenerated
+        );
+    }
+
+    function getRecordContent(uint256 recordId)
+        external
+        view
+        returns (
+            string memory recordURI,
+            bytes32 recordHash
+        )
+    {
+        ServiceRecord memory rec = records[recordId];
+        return (rec.recordURI, rec.recordHash);
+    }
+
+    // =========================================================
+    // INTERNALS - METADATA
     // =========================================================
 
     function _writeOriginMetadata(
@@ -653,6 +708,97 @@ contract VehiclePassportRegistry is LSP8IdentifiableDigitalAsset {
 
         emit OriginMetadataUpdated(tokenId, writer, metadataURI, metadataHash);
     }
+
+    // =========================================================
+    // INTERNALS - RECORD VALIDATION / STORAGE
+    // =========================================================
+
+    function _validateAuthorizationForRecord(
+        WriteAuthorization storage auth
+    ) internal view {
+        if (auth.authorizationId == 0) revert AuthorizationNotFound();
+        if (!auth.active) revert AuthorizationInactive();
+        if (auth.operator != msg.sender) revert AuthorizationWrongOperator();
+        if (vehicleAuthorizationEpoch[auth.tokenId] != auth.epoch) revert AuthorizationWrongEpoch();
+        if (tokenOwnerOf(auth.tokenId) != auth.grantedBy) revert AuthorizationOwnerMismatch();
+
+        if (auth.validFrom != 0 && block.timestamp < auth.validFrom) {
+            revert AuthorizationNotStarted();
+        }
+
+        if (auth.validUntil != 0 && block.timestamp > auth.validUntil) {
+            revert AuthorizationExpired();
+        }
+
+        if (auth.category == RecordCategory.OwnershipTransfer) {
+            revert OwnershipTransferManualRecordForbidden();
+        }
+    }
+
+    function _validateRecordInput(
+        bytes32 tokenId,
+        uint64 workStartedAt,
+        uint64 workCompletedAt,
+        uint256 supersedesRecordId
+    ) internal view {
+        if (workStartedAt == 0 || workCompletedAt < workStartedAt) {
+            revert InvalidWorkDates();
+        }
+
+        if (workCompletedAt > block.timestamp) {
+            revert WorkCompletionInFuture();
+        }
+
+        if (supersedesRecordId != 0) {
+            if (!records[supersedesRecordId].exists) revert SupersededRecordNotFound();
+            if (records[supersedesRecordId].tokenId != tokenId) {
+                revert SupersededRecordWrongVehicle();
+            }
+        }
+    }
+
+    function _consumeAuthorizationIfNeeded(
+        WriteAuthorization storage auth
+    ) internal {
+        if (auth.mode == AuthorizationMode.OneShot) {
+            auth.active = false;
+        }
+    }
+
+    function _storeServiceRecord(
+        bytes32 tokenId,
+        uint256 authorizationId,
+        RecordCategory category,
+        address writer,
+        CreateServiceRecordInput calldata input
+    ) internal returns (uint256 recordId) {
+        recordId = nextRecordId++;
+
+        records[recordId] = ServiceRecord({
+            exists: true,
+            recordId: recordId,
+            tokenId: tokenId,
+            authorizationId: authorizationId,
+            category: category,
+            cause: input.cause,
+            writer: writer,
+            createdAt: uint64(block.timestamp),
+            workStartedAt: input.workStartedAt,
+            workCompletedAt: input.workCompletedAt,
+            odometerKm: input.odometerKm,
+            recordURI: input.recordURI,
+            recordHash: input.recordHash,
+            frozen: true,
+            supersedesRecordId: input.supersedesRecordId,
+            systemGenerated: false
+        });
+
+        recordIdsByVehicle[tokenId].push(recordId);
+    }
+
+    // =========================================================
+    // INTERNALS - TRANSFER HOOK / SYSTEM RECORDS
+    // =========================================================
 
     function _afterTokenTransfer(
         address from,
@@ -689,28 +835,7 @@ contract VehiclePassportRegistry is LSP8IdentifiableDigitalAsset {
         address from,
         address to
     ) internal {
-        uint256 recordId = nextRecordId++;
-
-        records[recordId] = ServiceRecord({
-            exists: true,
-            recordId: recordId,
-            tokenId: tokenId,
-            authorizationId: 0,
-            category: RecordCategory.OwnershipTransfer,
-            cause: RecordCause.None,
-            writer: address(0),
-            createdAt: uint64(block.timestamp),
-            workStartedAt: uint64(block.timestamp),
-            workCompletedAt: uint64(block.timestamp),
-            odometerKm: 0,
-            recordURI: "",
-            recordHash: bytes32(0),
-            frozen: true,
-            supersedesRecordId: 0,
-            systemGenerated: true
-        });
-
-        recordIdsByVehicle[tokenId].push(recordId);
+        uint256 recordId = _storeOwnershipTransferRecord(tokenId);
 
         emit ServiceRecordCreated(
             recordId,
@@ -722,5 +847,33 @@ contract VehiclePassportRegistry is LSP8IdentifiableDigitalAsset {
         );
 
         emit OwnershipTransferRecordCreated(recordId, tokenId, from, to);
+    }
+
+    function _storeOwnershipTransferRecord(
+        bytes32 tokenId
+    ) internal returns (uint256 recordId) {
+        uint64 ts = uint64(block.timestamp);
+        recordId = nextRecordId++;
+
+        records[recordId] = ServiceRecord({
+            exists: true,
+            recordId: recordId,
+            tokenId: tokenId,
+            authorizationId: 0,
+            category: RecordCategory.OwnershipTransfer,
+            cause: RecordCause.None,
+            writer: address(0),
+            createdAt: ts,
+            workStartedAt: ts,
+            workCompletedAt: ts,
+            odometerKm: 0,
+            recordURI: "",
+            recordHash: bytes32(0),
+            frozen: true,
+            supersedesRecordId: 0,
+            systemGenerated: true
+        });
+
+        recordIdsByVehicle[tokenId].push(recordId);
     }
 }

@@ -1,0 +1,9 @@
+.exit
+await contract.owner();
+);  "0x97224Dc84d231d1e7e6e76bB210d0Df6a839C378"  "VehiclePassportRegistry",const contract = await ethers.getContractAt(
+.exit
+deployer.address
+const [deployer] = await ethers.getSigners();
+.exit
+await contract.owner();
+);  "0x781dD9A44E429449a15Fc20d67EDc32960eF5b34"  "VehiclePassportRegistry",const contract = await ethers.getContractAt(

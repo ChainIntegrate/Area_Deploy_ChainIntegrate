@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ERC165Checker",
+  "sourceName": "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol",
+  "abi": [],
+  "bytecode": "0x60808060405234601757603a9081601d823930815050f35b600080fdfe600080fdfea2646970667358221220b5d29194e67f8a4f36ab91f57fd29e72898f563f09de50806fedaa0b5531d8fa64736f6c63430008180033",
+  "deployedBytecode": "0x600080fdfea2646970667358221220b5d29194e67f8a4f36ab91f57fd29e72898f563f09de50806fedaa0b5531d8fa64736f6c63430008180033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

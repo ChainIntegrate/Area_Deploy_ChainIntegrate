@@ -7,10 +7,15 @@ module.exports = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 50
+        runs: 50,
       },
-      viaIR: true
-    }
+      viaIR: true,
+    },
+  },
+  paths: {
+    sources: "./contracts_vehicle",
+    cache: "./cache_vehicle",
+    artifacts: "./artifacts_vehicle",
   },
   networks: {
     luksoTestnet: {
@@ -19,7 +24,6 @@ module.exports = {
       accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY] : [],
     },
   },
-
   etherscan: {
     apiKey: {
       luksoTestnet: "abc",
@@ -35,6 +39,4 @@ module.exports = {
       },
     ],
   },
-
-  // sourcify: { enabled: false },
 };

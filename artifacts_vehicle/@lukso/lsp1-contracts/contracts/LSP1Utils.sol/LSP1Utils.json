@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "LSP1Utils",
+  "sourceName": "@lukso/lsp1-contracts/contracts/LSP1Utils.sol",
+  "abi": [],
+  "bytecode": "0x60808060405234601757603a9081601d823930815050f35b600080fdfe600080fdfea2646970667358221220fa6f1ca1f8c281b2f2d8ecd40c5a4cba49138f815e4359678a30278af5df077d64736f6c63430008180033",
+  "deployedBytecode": "0x600080fdfea2646970667358221220fa6f1ca1f8c281b2f2d8ecd40c5a4cba49138f815e4359678a30278af5df077d64736f6c63430008180033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

@@ -1,6 +1,6 @@
-# Compliance & Traceability Assets – LUKSO
+# Compliance, Traceability & Asset Lifecycle – LUKSO
 
-Repository di sviluppo per smart contract e test legati a **certificazione, tracciabilità e valutazione qualitativa** su blockchain **LUKSO**.
+Repository di sviluppo per smart contract legati a **certificazione, tracciabilità e gestione del ciclo di vita degli asset reali** su blockchain **LUKSO**.
 
 Il progetto utilizza gli standard **LSP (LUKSO Standard Proposals)** e segue un approccio incrementale:  
 ogni contratto rappresenta un’evoluzione controllata di modelli on-chain orientati a:
@@ -10,6 +10,7 @@ ogni contratto rappresenta un’evoluzione controllata di modelli on-chain orien
 - privacy by design
 - separazione dei ruoli
 - integrazione con sistemi off-chain
+- rappresentazione del **lifecycle di asset fisici**
 
 ---
 
@@ -17,15 +18,46 @@ ogni contratto rappresenta un’evoluzione controllata di modelli on-chain orien
 
 Fornire una base tecnica per:
 
-- emettere certificati come **asset digitali identificabili**
-- verificare autenticità, stato e validità dei certificati
+- emettere certificati e asset come **identità digitali verificabili**
+- tracciare **eventi, stati e trasformazioni nel tempo**
 - gestire **revoche, sostituzioni e versionamento**
-- rappresentare **valutazioni qualitative strutturate**
+- modellare **interazioni multi-attore su asset fisici**
 - limitare l’esposizione dei dati sensibili on-chain
-- separare chiaramente **governance**, **emissione** e **detenzione**
+- separare chiaramente:
+  - governance
+  - emissione
+  - operatività
+  - detenzione
 
-La blockchain viene utilizzata come **registro di verifica e audit**, non come database applicativo.
+La blockchain viene utilizzata come **registro di verità e audit**, non come database applicativo.
 
+---
+
+## Asset Lifecycle Model
+
+Con l’introduzione di VehiclePassport, il repository evolve da un insieme di contratti di certificazione a un modello più generale:
+
+**asset-centric lifecycle tracking**
+
+Pattern principali:
+
+- 1 token = 1 asset fisico
+- eventi rappresentati come **record append-only**
+- controllo scrittura delegato dal proprietario
+- separazione tra:
+  - identità dell’asset
+  - dati originari
+  - eventi operativi
+- invalidazione automatica dei permessi su cambio ownership
+- integrazione nativa con:
+  - sistemi off-chain (ERP, officine, supply chain)
+  - UI operative
+
+Questo pattern è riutilizzabile per:
+- veicoli
+- macchinari industriali
+- componenti critici
+- asset certificati lungo supply chain
 ---
 
 ## Approccio
@@ -42,33 +74,56 @@ La blockchain viene utilizzata come **registro di verifica e audit**, non come d
 ## Contratti nel repository
 
 ---
+---
+
 ### VehiclePassport
 
-Sistema di certificazione digitale del veicolo basato su standard LUKSO (LSP8).
+Sistema di certificazione e tracciabilità del ciclo di vita del veicolo basato su standard LUKSO (LSP8).
 
-Non è un semplice NFT descrittivo, ma un modello strutturato di identità e storico del veicolo che introduce:
+Non è un semplice NFT descrittivo, ma un modello strutturato che rappresenta:
+
+- identità del veicolo
+- ownership
+- storico operativo verificabile
+
+Introduce:
 
 - identificazione univoca tramite VIN hashato (`tokenId`)
-- metadata originari del veicolo gestiti via URI + hash, con possibilità di freeze
+- metadata originari del veicolo:
+  - gestiti via URI + hash
+  - modificabili solo dall’issuer iniziale
+  - congelabili (`freeze`) in modo definitivo
 - separazione tra:
   - dati originari del veicolo (issuer-controlled)
   - record operativi append-only (operator-controlled)
-- sistema di autorizzazioni dinamiche per la scrittura dei record:
+- sistema di autorizzazioni dinamiche per la scrittura:
   - `OneShot` (una singola operazione)
-  - `Reusable` (più operazioni nel tempo)
-- invalidazione automatica delle autorizzazioni tramite `vehicleAuthorizationEpoch` al cambio proprietario
-- creazione di record immutabili per ogni intervento:
-  - con categoria (es. MechanicalRepair, BodyRepair, ecc.)
-  - causa (es. Accident, Wear, Routine, ecc.)
-- generazione automatica del record di passaggio proprietà (`OwnershipTransfer`)
-- modello ibrido on-chain / off-chain:
-  - on-chain: integrità, stato, relazioni
-  - off-chain: contenuto dettagliato (JSON, documenti, media)
-- compatibilità con:
+  - `Reusable` (più operazioni)
+- autorizzazioni:
+  - concesse dal proprietario corrente
+  - revocabili
+  - invalidate automaticamente al cambio proprietà tramite `vehicleAuthorizationEpoch`
+- modello record:
+  - un record per intervento rilevante
+  - creato dall’operatore a fine lavoro
+  - immutabile (frozen at creation)
+- struttura record:
+  - `category` (MechanicalRepair, BodyRepair, ecc.)
+  - `cause` (Accident, Wear, Routine, ecc.)
+  - `workStartedAt`, `workCompletedAt`
+  - `odometerKm`
+  - `recordURI` (off-chain)
+  - `recordHash` (integrità)
+- generazione automatica del record:
+  - `OwnershipTransfer` al trasferimento del token
+- modello ibrido:
+  - on-chain → stato, relazioni, integrità
+  - off-chain → contenuto esteso (JSON, documenti, media)
+- compatibilità:
   - Universal Profile (esperienza avanzata)
-  - wallet standard EOA (interoperabilità)
+  - wallet EOA standard (interoperabilità)
 
-Costituisce la base per un "libretto digitale del veicolo" verificabile, estendibile e interoperabile.
+Costituisce la base per un **libretto digitale del veicolo verificabile**, con controllo in capo al proprietario e piena auditabilità.
 
 
 ## Compliance Certificates
@@ -232,7 +287,12 @@ scripts/
   deploy-rev2.js
   deploy_battery_allowlist_testnet.js
   deploySupplierQualityLSP8.js
+  deploy_vehicle.js
   allow_issuer_via_up_execute.js
+
+Contract_Spec/
+  VehiclePassportSystem.md
+  Traceability_test2_spec.md
 
 DEPLOYMENT.md
 contract_spec.md

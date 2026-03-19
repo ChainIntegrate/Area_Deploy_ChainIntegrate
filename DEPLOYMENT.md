@@ -1,5 +1,75 @@
 ## LUKSO Testnet
 
+---
+
+### Vehicle Passport
+
+**REV1 (current)**
+- Contract: `VehiclePassportRegistry`
+- Address: `0x97224Dc84d231d1e7e6e76bB210d0Df6a839C378`
+- ChainId: `4201`
+- Verified: ✅ (Standard JSON Input)
+- Deployed: `2026-03-19`
+- Owner (Admin): Universal Profile  
+  `0x83cBE526D949A3AaaB4EF9a03E48dd862e81472C`
+- Authorized dealer / issuer (current setup):  
+  `0xAa18E265Bb38cD507eD018AF9abf0FeF16E685C9`
+- Notes:
+  - LSP8 Identifiable Digital Asset
+  - `tokenId = keccak256(normalizedVIN)`
+  - One token = one vehicle passport
+  - Vehicle origin metadata managed as token-scoped data
+  - Origin metadata structure:
+    - `originMetadataURI`
+    - `originMetadataHash`
+    - `writtenBy`
+    - `frozen`
+  - Origin metadata updatable only by original writer until freeze
+  - Origin metadata freeze independent from service record lifecycle
+  - Issuer model:
+    - contract owner (UP) authorizes dealers / concessionari
+    - authorized issuer mints passport to first vehicle owner
+  - Ownership model:
+    - current token owner controls write authorizations
+    - ownership transferable with native LSP8 transfer flow
+  - Write authorization model:
+    - `authorizationId` per authorization
+    - category-scoped authorization
+    - `OneShot` or `Reusable`
+    - revocable by current owner
+  - Automatic invalidation of old authorizations via:
+    - `vehicleAuthorizationEpoch`
+    - epoch increment on ownership transfer
+  - Service record model:
+    - one record per relevant intervention
+    - operator creates record only after work completion
+    - record includes:
+      - `workStartedAt`
+      - `workCompletedAt`
+      - `odometerKm`
+      - `recordURI`
+      - `recordHash`
+      - `category`
+      - `cause`
+    - records are created already frozen
+  - Record cause model includes:
+    - `Routine`
+    - `Wear`
+    - `Accident`
+    - `Recall`
+    - `InspectionOutcome`
+    - `Diagnostic`
+    - `Other`
+  - Automatic system-generated `OwnershipTransfer` record on token transfer
+  - Compatible with:
+    - Universal Profile ownership / governance flows
+    - standard EOA-compatible holding and transfer at token level
+  - Designed for:
+    - vehicle lifecycle traceability
+    - owner-controlled third-party write access
+    - hybrid on-chain / off-chain storage model
+    - future UI-driven operational workflows
+
 ### Compliance Certificates
 
 **REV1**
