@@ -8,6 +8,8 @@ node_modules
 # Hardhat files
 /cache
 /artifacts
+artifacts_vehicle/
+cache_vehicle/
 
 # TypeChain files
 /typechain
