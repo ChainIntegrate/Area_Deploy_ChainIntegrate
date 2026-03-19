@@ -298,5 +298,4 @@ Contract_Spec/
   SupplierQualityLSP8.md
 
 DEPLOYMENT.md
-contract_spec.md
 README.md
