@@ -293,6 +293,9 @@ scripts/
 Contract_Spec/
   VehiclePassportSystem.md
   Traceability_test2_spec.md
+  BatteryCarbonCertificateLSP8.md
+  ComplianceCertificateLSP8.md
+  SupplierQualityLSP8.md
 
 DEPLOYMENT.md
 contract_spec.md
