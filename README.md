@@ -74,6 +74,88 @@ Questo pattern è riutilizzabile per:
 ## Contratti nel repository
 
 ---
+
+### CondominiumRegistry
+
+Sistema di identità, governance e tracciabilità del ciclo di vita dei condomini basato su standard LUKSO (LSP8).
+
+Non è un semplice NFT descrittivo, ma un modello strutturato che rappresenta:
+
+- identità del condominio
+- amministrazione e governance
+- storico verificabile delle delibere
+- gestione dei lavori e dei fornitori
+- registro cronologico degli eventi
+
+Introduce:
+
+- identificazione univoca del condominio tramite `tokenId` di tipo `bytes32`
+- mint del token direttamente all’amministratore del condominio (Universal Profile)
+- controllo dei creator autorizzati:
+  - definiti dal contract owner (ChainIntegrate)
+  - abilitati al mint di nuovi condomini
+- modello di governance:
+  - l’amministratore del condominio coincide con il proprietario del token LSP8
+  - trasferimento dell’amministrazione tramite trasferimento del token
+  - possibilità di attivare o disattivare il condominio
+- sistema di gestione delle delibere:
+  - una delibera per ogni decisione assembleare
+  - classificazione tramite `ResolutionCategory`
+  - documentazione gestita via `dataURI` + `dataHash`
+  - tracciabilità di autore e timestamp
+- gestione dei fornitori:
+  - registro globale dei fornitori gestito dal contract owner
+  - associazione dei fornitori ai lavori del condominio
+  - supporto opzionale per wallet Universal Profile dei fornitori
+- modello di gestione dei lavori:
+  - un `WorkItem` per ogni intervento rilevante
+  - collegamento opzionale a una delibera e a un fornitore
+  - tipologie di lavoro:
+    - `Generic`
+    - `FixedTerm` con data di fine pianificata
+  - ciclo di vita del lavoro:
+    - `Planned`
+    - `Approved`
+    - `InProgress`
+    - `Completed`
+    - `Closed`
+    - `Suspended`
+    - `Cancelled`
+  - gestione di date pianificate e reali (`planned` e `actual`)
+- registro cronologico degli eventi:
+  - ogni azione rilevante genera un `RegistryEvent`
+  - eventi manuali o generati automaticamente dal sistema
+  - collegamenti opzionali a delibere e lavori
+  - principali tipologie di evento:
+    - `AssembleaConvocata`
+    - `VerbalePubblicato`
+    - `DeliberaPubblicata`
+    - `BilancioPubblicato`
+    - `FornitoreSelezionato`
+    - `LavoriAvviati`
+    - `LavoriConclusi`
+    - `ContestazioneAperta`
+    - `ContestazioneChiusa`
+    - `AmministratoreAggiornato`
+- modello ibrido:
+  - on-chain → stato, relazioni e integrità dei dati
+  - off-chain → contenuti estesi (documenti, verbali, bilanci, contratti, media)
+- controllo degli accessi:
+  - **ChainIntegrate (contract owner)**:
+    - autorizza i creator
+    - gestisce il registro dei fornitori
+  - **Creator autorizzati**:
+    - mintano nuovi condomini
+  - **Amministratore (token owner)**:
+    - gestisce delibere, lavori ed eventi
+    - trasferisce l’amministrazione
+- compatibilità:
+  - Universal Profile (esperienza completa e governance avanzata)
+  - account compatibili ERC725Y
+  - interoperabilità con l’ecosistema LUKSO
+
+Costituisce la base per un **registro digitale del condominio verificabile**, con governance trasparente, tracciabilità delle decisioni e piena auditabilità delle attività nel tempo.
+
 ---
 
 ### VehiclePassport
@@ -270,32 +352,3 @@ Mantenuto esclusivamente a scopo storico e comparativo.
 
 ---
 
-## Struttura del repository
-
-```text
-contracts/
-  ComplianceCertificate_Rev2.sol
-  ComplianceCertificateLSP8.sol
-  BatteryCarbonCertificateLSP8.sol
-  SupplierQualityLSP8.sol
-  Traceability_test2.sol
-  OLD_Traceability_test1.sol
-  VehiclePassport.sol
-
-scripts/
-  deploy_ComplianceCertificateLSP8.js
-  deploy-rev2.js
-  deploy_battery_allowlist_testnet.js
-  deploySupplierQualityLSP8.js
-  deploy_vehicle.js
-  allow_issuer_via_up_execute.js
-
-Contract_Spec/
-  VehiclePassportSystem.md
-  Traceability_test2_spec.md
-  BatteryCarbonCertificateLSP8.md
-  ComplianceCertificateLSP8.md
-  SupplierQualityLSP8.md
-
-DEPLOYMENT.md
-README.md
