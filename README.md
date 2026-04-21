@@ -75,86 +75,183 @@ Questo pattern è riutilizzabile per:
 
 ---
 
-### CondominiumRegistry
+### CondominiumRegistry (V2)
 
 Sistema di identità, governance e tracciabilità del ciclo di vita dei condomini basato su standard LUKSO (LSP8).
 
 Non è un semplice NFT descrittivo, ma un modello strutturato che rappresenta:
 
-- identità del condominio
-- amministrazione e governance
-- storico verificabile delle delibere
-- gestione dei lavori e dei fornitori
-- registro cronologico degli eventi
+* identità del condominio
+* amministrazione e governance
+* storico verificabile delle delibere
+* gestione dei lavori e dei fornitori
+* registro cronologico degli eventi
+
+---
+
+## 🆕 Evoluzione V2
+
+* I fornitori non sono più globali
+* Ogni condominio gestisce il proprio registro fornitori
+* I fornitori sono creati e gestiti **dall’amministratore del condominio**
+* Eliminata la dipendenza dal contract owner per la gestione operativa
+
+---
+
+## Modello
 
 Introduce:
 
-- identificazione univoca del condominio tramite `tokenId` di tipo `bytes32`
-- mint del token direttamente all’amministratore del condominio (Universal Profile)
-- controllo dei creator autorizzati:
-  - definiti dal contract owner (ChainIntegrate)
-  - abilitati al mint di nuovi condomini
-- modello di governance:
-  - l’amministratore del condominio coincide con il proprietario del token LSP8
-  - trasferimento dell’amministrazione tramite trasferimento del token
-  - possibilità di attivare o disattivare il condominio
-- sistema di gestione delle delibere:
-  - una delibera per ogni decisione assembleare
-  - classificazione tramite `ResolutionCategory`
-  - documentazione gestita via `dataURI` + `dataHash`
-  - tracciabilità di autore e timestamp
-- gestione dei fornitori:
-  - registro globale dei fornitori gestito dal contract owner
-  - associazione dei fornitori ai lavori del condominio
-  - supporto opzionale per wallet Universal Profile dei fornitori
-- modello di gestione dei lavori:
-  - un `WorkItem` per ogni intervento rilevante
-  - collegamento opzionale a una delibera e a un fornitore
-  - tipologie di lavoro:
-    - `Generic`
-    - `FixedTerm` con data di fine pianificata
-  - ciclo di vita del lavoro:
-    - `Planned`
-    - `Approved`
-    - `InProgress`
-    - `Completed`
-    - `Closed`
-    - `Suspended`
-    - `Cancelled`
-  - gestione di date pianificate e reali (`planned` e `actual`)
-- registro cronologico degli eventi:
-  - ogni azione rilevante genera un `RegistryEvent`
-  - eventi manuali o generati automaticamente dal sistema
-  - collegamenti opzionali a delibere e lavori
-  - principali tipologie di evento:
-    - `AssembleaConvocata`
-    - `VerbalePubblicato`
-    - `DeliberaPubblicata`
-    - `BilancioPubblicato`
-    - `FornitoreSelezionato`
-    - `LavoriAvviati`
-    - `LavoriConclusi`
-    - `ContestazioneAperta`
-    - `ContestazioneChiusa`
-    - `AmministratoreAggiornato`
-- modello ibrido:
-  - on-chain → stato, relazioni e integrità dei dati
-  - off-chain → contenuti estesi (documenti, verbali, bilanci, contratti, media)
-- controllo degli accessi:
-  - **ChainIntegrate (contract owner)**:
-    - autorizza i creator
-    - gestisce il registro dei fornitori
-  - **Creator autorizzati**:
-    - mintano nuovi condomini
-  - **Amministratore (token owner)**:
-    - gestisce delibere, lavori ed eventi
-    - trasferisce l’amministrazione
-- compatibilità:
-  - Universal Profile (esperienza completa e governance avanzata)
-  - account compatibili ERC725Y
-  - interoperabilità con l’ecosistema LUKSO
+* identificazione univoca del condominio tramite `tokenId` (`bytes32`)
+* mint del token direttamente all’amministratore del condominio (Universal Profile)
+* controllo dei creator autorizzati:
 
-Costituisce la base per un **registro digitale del condominio verificabile**, con governance trasparente, tracciabilità delle decisioni e piena auditabilità delle attività nel tempo.
+  * definiti dal contract owner (ChainIntegrate)
+  * abilitati al mint di nuovi condomini
+
+---
+
+## Governance
+
+* l’amministratore del condominio coincide con `adminUP`
+* trasferimento dell’amministrazione tramite funzione dedicata (`transferAdministration`)
+* possibilità di attivare o disattivare il condominio
+
+---
+
+## Delibere
+
+* una delibera per ogni decisione assembleare
+* classificazione tramite `ResolutionCategory`
+* documentazione via `dataURI` + `dataHash`
+* tracciabilità completa di autore e timestamp
+
+---
+
+## Fornitori (V2)
+
+* registro **per-condominio (tokenId-based)**
+* ogni fornitore appartiene a un singolo condominio
+* gestione tramite:
+
+  * `createContractor(tokenId, ...)`
+  * `setContractorActive(tokenId, ...)`
+
+Ogni fornitore include:
+
+* `name`
+* eventuale `walletUP`
+* `metadataURI`
+* `active`
+* `createdBy`
+
+---
+
+## Lavori
+
+* un `WorkItem` per ogni intervento
+* collegamento opzionale a:
+
+  * delibera
+  * fornitore (dello stesso condominio)
+
+Tipologie:
+
+* `Generic`
+* `FixedTerm` (con data fine pianificata)
+
+Ciclo di vita:
+
+* `Planned`
+* `Approved`
+* `InProgress`
+* `Completed`
+* `Closed`
+* `Suspended`
+* `Cancelled`
+
+Gestione completa di date pianificate e reali.
+
+---
+
+## Eventi
+
+* ogni azione genera un `RegistryEvent`
+* eventi automatici o manuali
+* collegamenti a delibere e lavori
+
+Tipologie principali:
+
+* `AssembleaConvocata`
+* `VerbalePubblicato`
+* `DeliberaPubblicata`
+* `BilancioPubblicato`
+* `FornitoreSelezionato`
+* `LavoriAvviati`
+* `LavoriConclusi`
+* `ContestazioneAperta`
+* `ContestazioneChiusa`
+* `AmministratoreAggiornato`
+
+---
+
+## Architettura dati
+
+* **on-chain:** stato, relazioni, integrità
+* **off-chain:** documenti e contenuti estesi
+
+---
+
+## Access control
+
+* **Contract owner (ChainIntegrate):**
+
+  * autorizza i creator
+
+* **Creator autorizzati:**
+
+  * mintano nuovi condomini
+
+* **Amministratore del condominio:**
+
+  * gestisce fornitori, delibere, lavori ed eventi
+  * trasferisce l’amministrazione
+
+---
+
+## Compatibilità
+
+* Universal Profile
+* ERC725Y
+* ecosistema LUKSO
+
+---
+
+## 🎯 Obiettivo
+
+Base per un **registro digitale del condominio verificabile**, con:
+
+* governance trasparente
+* tracciabilità completa
+* auditabilità nel tempo
+
+---
+
+# 📜 Legacy (V1)
+
+Versione iniziale del contratto.
+
+Differenza principale:
+
+* fornitori gestiti **globalmente dal contract owner**
+* non isolati per condominio
+
+Limite:
+
+* modello non aderente alla struttura reale dei condomini
+
+V2 introduce isolamento e gestione decentralizzata per condominio.
+
 
 ---
 
@@ -342,13 +439,24 @@ Mantenuto esclusivamente a scopo storico e comparativo.
 
 ## Stato del progetto
 
-- ✔️ Compliance Certificates REV2 deployato e verificato su LUKSO Testnet
-- ✔️ Battery Carbon Certificate deployato e verificato su LUKSO Testnet
-- ✔️ Supplier Quality Evaluations deployato e verificato su LUKSO Testnet
-- ✔️ Governance basata su Universal Profile
-- ✔️ Emissione controllata tramite allowlist / ruoli
-- ✔️ Architettura orientata a privacy, auditabilità e antifalsificazione
-- ✔️ Base pronta per integrazione UI e sistemi aziendali
+* ✔️ Battery Compliance Certificates deployato, verificato e con UI operativa su LUKSO Testnet
+
+* ✔️ Supplier Traceability & Quality Evaluations deployato, verificato e con UI operativa
+
+* ✔️ Vehicle Passport deployato, verificato e con UI operativa
+
+* ✔️ Condominium Registry V1 deployato e verificato
+
+* ✔️ Condominium Registry V2 deployato e verificato (fornitori per-condominio)
+
+* ⏳ UI Condominium Registry in fase di rilascio
+
+* ✔️ Governance basata su Universal Profile
+
+* ✔️ Modello dati ibrido (on-chain + off-chain)
+
+* ✔️ Architettura orientata a tracciabilità e auditabilità
+
 
 ---
 

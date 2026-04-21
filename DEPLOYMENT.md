@@ -2,152 +2,205 @@
 
 ---
 
-### Condominium Registry
+# 🧱 Condominium Registry (V2)
 
-- **Contract:** `CondominiumRegistryLSP8`
-- **Address:** `0x489F040770f099d48957F7065C88aC0cdB322a0C`
-- **ChainId:** `4201`
-- **Verified:** ✅ (Standard JSON Input)
-- **Deployed:** `2026-04-16`
-- **Owner (Admin):** Universal Profile  
+* **Contract:** `CondominiumRegistryLSP8V2`
+* **Address:** `TBD`
+* **ChainId:** `4201`
+* **Verified:** ✅ (Standard JSON Input)
+* **Deployed:** `2026-04-21`
+* **Owner (Admin):** Universal Profile
   `0x83cBE526D949A3AaaB4EF9a03E48dd862e81472C`
-- **Required Profile Interface:**  
+* **Required Profile Interface:**
   `0x629aa694` (ERC725Y – Universal Profile compatibility)
-- **Authorized creators:**  
+* **Authorized creators:**
   Configurable via `setAuthorizedCreator(address,bool)` by the contract owner.
 
-#### Notes
+---
 
-- **LSP8 Identifiable Digital Asset**
-  - One token = one condominium.
-  - `tokenId` is a `bytes32` identifier defined at mint time.
-  - Token is minted directly to the condominium administrator Universal Profile.
+## 🔁 Key Upgrade (V2)
 
-- **Deployment and governance model**
-  - Contract deployed by ChainIntegrate.
-  - Contract ownership assigned to the ChainIntegrate Universal Profile.
-  - Only addresses supporting the required ERC165 interface (`ERC725Y`) can act as:
-    - condominium administrators
-    - authorized creators
-    - contractor profiles (if a wallet is provided)
+* **Contractors are now scoped per condominium**
 
-- **Condominium identity model**
-  - Each condominium stores:
-    - `name`
-    - `location`
-    - `adminUP`
-    - `createdAt`
-    - `active` status
-  - Administration can be transferred via `transferAdministration`, generating a system event.
+  * Each condominium maintains its own contractor registry
+  * Contractors are created and managed **only by the condominium administrator**
+  * Eliminates global contractor dependency
 
-- **Creator model**
-  - Only **authorized creators** can mint new condominiums using `mintCondominium`.
-  - Authorization is managed by the contract owner.
-  - Minting assigns the LSP8 token directly to the administrator UP.
+---
 
-- **Resolutions (Delibere)**
-  - Managed per condominium via `createResolution`.
-  - Each resolution includes:
-    - `category`
-    - `title`
-    - `approved` status
-    - `dataURI` and `dataHash` for off-chain documentation
-    - `createdBy` and `createdAt`
-  - Supported `ResolutionCategory` values:
-    - `Generic`
-    - `OrdinaryWorks`
-    - `ExtraordinaryWorks`
-    - `Heating`
-    - `AnnualBudget`
-    - `HeatingBudget`
-    - `Administrator`
-    - `Regulation`
-    - `Other`
+## 🧠 Model Overview
 
-- **Contractor model**
-  - Contractors are globally registered by the contract owner.
-  - Each contractor includes:
-    - `name`
-    - optional `walletUP` (must support the required profile interface)
-    - `metadataURI`
-    - `active` status
-  - Contractors can be assigned to work items.
+### LSP8 Asset Model
 
-- **Work items**
-  - Managed per condominium via `createWorkItem`.
-  - Each work includes:
-    - optional link to a `resolutionId`
-    - optional `contractorId`
-    - `title` and `category`
-    - `WorkType` (`Generic` or `FixedTerm`)
-    - `WorkStatus` lifecycle:
-      - `Planned`
-      - `Approved`
-      - `InProgress`
-      - `Completed`
-      - `Closed`
-      - `Suspended`
-      - `Cancelled`
-    - planned and actual start/end dates
-  - Contractor assignment is handled via `assignContractorToWork`.
-  - Status updates are managed through `updateWorkStatus`.
+* **1 token = 1 condominium**
+* `tokenId` is a `bytes32` identifier defined at mint time
+* Token is minted directly to the administrator Universal Profile
 
-- **Registry events (chronological log)**
-  - Every significant action generates a `RegistryEvent`, ensuring full traceability.
-  - Events can be added manually via `addEvent` or automatically by the system.
-  - Each event includes:
-    - `eventType`
-    - `timestamp`
-    - `category` and `title`
-    - optional links to `resolutionId` and `workId`
-    - `dataURI` and `dataHash`
-    - `createdBy`
-  - Supported `EventType` values:
-    - `AssembleaConvocata`
-    - `VerbalePubblicato`
-    - `DeliberaPubblicata`
-    - `BilancioPubblicato`
-    - `FornitoreSelezionato`
-    - `LavoriAvviati`
-    - `LavoriConclusi`
-    - `ContestazioneAperta`
-    - `ContestazioneChiusa`
-    - `AmministratoreAggiornato`
+---
 
-- **Lifecycle management**
-  - Condominiums can be activated or deactivated via `setCondominiumActive`.
-  - Administrative changes and operational milestones are permanently recorded as events.
+### 🏢 Condominium Identity
 
-- **Access control model**
-  - **Contract owner (UP):**
-    - authorizes creators
-    - manages contractor registry
-  - **Authorized creators:**
-    - mint new condominium tokens
-  - **Condominium administrator (token owner):**
-    - manages resolutions, works, and events
-    - transfers administration
+Each condominium stores:
 
-- **Data architecture**
-  - Hybrid **on-chain/off-chain** model.
-  - Legal and operational documents are stored off-chain and referenced via:
-    - `dataURI`
-    - `dataHash` (integrity verification)
+* `name`
+* `location`
+* `adminUP`
+* `createdAt`
+* `active`
 
-- **Compatibility**
-  - Fully compatible with:
-    - Universal Profile ownership and governance flows
-    - ERC165 interface detection
-    - Standard LSP8 transfer mechanisms
-    - EOA-compatible token holding and transfer
+Administration can be transferred via `transferAdministration`, generating a system event.
 
-- **Designed for**
-  - Digital identity of condominiums
-  - Transparent governance and traceability
-  - Lifecycle management of resolutions and works
-  - Supplier and contractor accountability
-  - Event-driven historical registry
-  - Future UI-driven operational workflows
+---
+
+### 👥 Roles
+
+* **Contract owner (UP):**
+
+  * authorizes creators
+
+* **Authorized creators:**
+
+  * mint new condominiums
+
+* **Condominium administrator:**
+
+  * manages contractors, resolutions, works, and events
+  * transfers administration
+
+---
+
+### 🧾 Resolutions (Delibere)
+
+Managed per condominium via `createResolution`.
+
+Each resolution includes:
+
+* `category`
+* `title`
+* `approved`
+* `dataURI`, `dataHash`
+* `createdBy`, `createdAt`
+
+---
+
+### 🏗️ Contractor Model (V2)
+
+* Contractors are **NOT global anymore**
+* Each contractor is linked to a specific `tokenId`
+
+Each contractor includes:
+
+* `name`
+* optional `walletUP`
+* `metadataURI`
+* `active`
+* `createdBy`
+
+Managed via:
+
+* `createContractor(tokenId, ...)`
+* `setContractorActive(tokenId, ...)`
+
+---
+
+### 🔧 Work Items
+
+Managed per condominium via `createWorkItem`.
+
+Each work includes:
+
+* optional `resolutionId`
+* optional `contractorId`
+* `title`, `category`
+* `WorkType`: `Generic` | `FixedTerm`
+* lifecycle `WorkStatus`
+* planned and actual dates
+
+---
+
+### 📜 Registry Events
+
+Every action produces a `RegistryEvent`.
+
+Includes:
+
+* `eventType`
+* `timestamp`
+* `category`, `title`
+* links to resolution/work
+* `dataURI`, `dataHash`
+* `createdBy`
+
+Ensures full traceability.
+
+---
+
+### 🔐 Access Control
+
+* Contractors → managed by **condominium admin**
+* Resolutions, works, events → managed by **condominium admin**
+* Minting → controlled by **authorized creators**
+
+---
+
+### 🧩 Data Architecture
+
+* Hybrid **on-chain / off-chain**
+* Documents stored off-chain, referenced via:
+
+  * `dataURI`
+  * `dataHash`
+
+---
+
+### 🎯 Designed for
+
+* Digital identity of condominiums
+* Transparent governance
+* Work lifecycle management
+* Contractor accountability
+* Event-driven audit trail
+
+---
+
+# 📜 Legacy (V1)
+
+* **Contract:** `CondominiumRegistryLSP8`
+* **Address:** `0x489F040770f099d48957F7065C88aC0cdB322a0C`
+* **Deployed:** `2026-04-16`
+* **Verified:** ✅
+
+---
+
+## Key Differences (V1 → V2)
+
+* Contractors were **globally registered**
+* Managed only by **contract owner**
+* Shared across all condominiums
+
+---
+
+## Limitation
+
+* Did not reflect real-world structure
+* Introduced centralization in supplier management
+
+---
+
+## Migration Rationale
+
+V2 introduces:
+
+* decentralized contractor management
+* per-condominium isolation
+* improved governance model
+
+---
+
+## Status
+
+* V1 remains deployed and functional
+* V2 is the **active evolution** of the protocol
 
 ---
 

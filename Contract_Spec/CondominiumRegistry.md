@@ -1,4 +1,4 @@
-# Condominium Registry System
+# Condominium Registry System (V2)
 
 ## Overview
 
@@ -6,13 +6,24 @@ Il **Condominium Registry System** è un sistema basato su **LUKSO LSP8** per ra
 
 Ogni condominio è rappresentato da un **Condominium Token** che contiene:
 
-- identità univoca del condominio
-- amministratore associato
-- storico delle delibere
-- gestione dei lavori e dei fornitori
-- registro cronologico degli eventi amministrativi e tecnici
+* identità univoca del condominio
+* amministratore associato
+* storico delle delibere
+* gestione dei lavori e dei fornitori
+* registro cronologico degli eventi amministrativi e tecnici
 
 Il sistema è progettato per l’ecosistema **LUKSO / Universal Profile**, garantendo che i ruoli operativi siano gestiti da account compatibili con gli standard LUKSO.
+
+---
+
+## 🆕 Evoluzione V2
+
+La V2 introduce una modifica strutturale fondamentale:
+
+* i fornitori non sono più globali
+* ogni condominio ha il proprio registro fornitori
+* i fornitori sono creati e gestiti dall’amministratore del condominio
+* eliminata la dipendenza operativa dal contract owner
 
 ---
 
@@ -20,15 +31,10 @@ Il sistema è progettato per l’ecosistema **LUKSO / Universal Profile**, garan
 
 Il contratto utilizza:
 
-- **LSP8 Identifiable Digital Asset** come standard per il token NFT del condominio
-- **tokenId di tipo bytes32**
-- metadata del condominio gestiti tramite URI e hash
-- verifica dei profili tramite **ERC165** e interfaccia **ERC725Y**
-- logica custom per:
-  - gestione amministratori
-  - delibere assembleari
-  - lavori e fornitori
-  - registro cronologico degli eventi
+* **LSP8 Identifiable Digital Asset**
+* `tokenId` di tipo `bytes32`
+* metadata tramite URI + hash
+* verifica profili via **ERC165 + ERC725Y**
 
 ---
 
@@ -40,15 +46,11 @@ Ogni condominio corrisponde a **un solo token**.
 
 ### Token ID
 
-Il `tokenId` è un identificativo `bytes32` definito al momento del mint. Può essere generato off-chain in modo deterministico (ad esempio tramite hash di un identificativo amministrativo).
-
-Esempio concettuale:
+Il `tokenId` è un identificativo `bytes32` definito al mint:
 
 ```solidity
 tokenId = keccak256(abi.encodePacked(condominiumIdentifier))
 ```
-
-Questo garantisce l’univocità del condominio all’interno del sistema.
 
 ---
 
@@ -56,375 +58,259 @@ Questo garantisce l’univocità del condominio all’interno del sistema.
 
 ### 1. ChainIntegrate
 
-ChainIntegrate è l’**admin del contratto**.
+* deploy del contratto
+* autorizzazione creator
+* governance generale
 
-Ha il compito di:
-
-- deployare il contratto
-- autorizzare i creator che possono mintare nuovi condomini
-- registrare e gestire i fornitori
-- revocare autorizzazioni operative
-
-ChainIntegrate **non gestisce direttamente le attività operative del condominio**, che sono di competenza dell’amministratore.
+⚠️ Non gestisce più i fornitori nella V2.
 
 ---
 
 ### 2. Creator autorizzato
 
-Il creator è il soggetto autorizzato a creare nuovi condomini.
-
-Può:
-
-- mintare un nuovo token LSP8 che rappresenta un condominio
-- assegnare il token all’amministratore del condominio
-
-Il creator può operare solo se autorizzato da ChainIntegrate tramite `setAuthorizedCreator`.
+* mint dei condomini
+* assegnazione del token all’amministratore
 
 ---
 
 ### 3. Amministratore del condominio
 
-L’amministratore è il **current owner del token LSP8**.
-
-Può:
-
-- gestire le delibere assembleari
-- creare e aggiornare i lavori
-- assegnare i fornitori ai lavori
-- registrare eventi amministrativi e tecnici
-- trasferire l’amministrazione a un nuovo amministratore
-- attivare o disattivare il condominio
-
-L’amministratore deve essere un **Universal Profile** o un account che supporta l’interfaccia ERC725Y.
+* gestione completa operativa
+* fornitori (V2)
+* delibere
+* lavori
+* eventi
+* trasferimento amministrazione
 
 ---
 
-### 4. Fornitore
+### 4. Fornitore (V2)
 
-Il fornitore è un soggetto esterno che può essere coinvolto nei lavori del condominio.
+* entità **specifica del singolo condominio**
+* non più globale
 
 Esempi:
 
-- impresa edile
-- manutentore impianti
-- ditta di pulizie
-- amministratore energetico
-- tecnico specializzato
-
-Il fornitore può essere registrato globalmente dal contract owner e successivamente associato ai lavori.
+* impresa edile
+* manutentore
+* tecnico
+* fornitori servizi
 
 ---
 
 ## Architettura generale
 
-### Collection unica
-
-Il sistema è costruito come:
-
-- **1 contratto LSP8**
-- **molti token**
-- **1 token per ogni condominio**
-
-Il contratto non crea un contratto separato per ogni condominio.
+* 1 contratto LSP8
+* N condomini (token)
+* isolamento dati per `tokenId`
 
 ---
 
 ## Dati del condominio
 
-Per ogni condominio vengono salvati:
-
-- `tokenId`
-- `adminUP`
-- `name`
-- `location`
-- `createdAt`
-- `active`
-
-### Significato
-
-- `adminUP`: amministratore del condominio
-- `name`: denominazione del condominio
-- `location`: ubicazione
-- `createdAt`: timestamp di creazione
-- `active`: stato operativo del condominio
-
-### Trasferimento dell’amministrazione
-
-L’amministrazione può essere trasferita tramite `transferAdministration`, generando automaticamente un evento di sistema.
+* `tokenId`
+* `adminUP`
+* `name`
+* `location`
+* `createdAt`
+* `active`
 
 ---
 
-## Delibere assembleari
+## Delibere
 
-Le delibere sono gestite per ogni condominio tramite `createResolution`.
+Gestite per condominio:
 
-### Struttura logica di una delibera
-
-Ogni delibera contiene:
-
-- `resolutionId`
-- `tokenId`
-- `category`
-- `title`
-- `createdAt`
-- `approved`
-- `dataURI`
-- `dataHash`
-- `createdBy`
-
-### Categorie di delibera
-
-Le categorie previste sono:
-
-- `Generic`
-- `OrdinaryWorks`
-- `ExtraordinaryWorks`
-- `Heating`
-- `AnnualBudget`
-- `HeatingBudget`
-- `Administrator`
-- `Regulation`
-- `Other`
-
-### Perché usare URI + hash
-
-Il sistema salva:
-
-- un **URI**
-- un **hash verificabile**
-
-Questo approccio consente:
-
-- costi on-chain contenuti
-- maggiore flessibilità dei dati
-- verifica di integrità del contenuto off-chain
-- compatibilità con documenti legali e amministrativi
+* `resolutionId`
+* `category`
+* `title`
+* `approved`
+* `dataURI`
+* `dataHash`
+* `createdBy`
 
 ---
 
-## Gestione dei fornitori
+## Fornitori (V2)
 
-I fornitori sono registrati globalmente dal contract owner.
+Registro **per-condominio**
 
-### Struttura logica di un fornitore
+### Struttura
 
-Ogni fornitore contiene:
+* `contractorId`
+* `tokenId`
+* `name`
+* `walletUP` (opzionale)
+* `metadataURI`
+* `createdAt`
+* `active`
+* `createdBy`
 
-- `contractorId`
-- `name`
-- `walletUP` (opzionale)
-- `metadataURI`
-- `createdAt`
-- `active`
+### Gestione
 
-I fornitori possono essere successivamente associati ai lavori del condominio.
-
----
-
-## Gestione dei lavori
-
-Ogni intervento sul condominio è rappresentato come un **Work Item**.
-
-### Struttura logica di un lavoro
-
-Ogni lavoro contiene:
-
-- `workId`
-- `tokenId`
-- `resolutionId` (opzionale)
-- `contractorId` (opzionale)
-- `title`
-- `category`
-- `workType`
-- `status`
-- `createdAt`
-- `plannedStartDate`
-- `plannedEndDate`
-- `actualStartDate`
-- `actualEndDate`
-
-### Tipologie di lavoro
-
-- `Generic`
-- `FixedTerm` (richiede una data di fine pianificata)
-
-### Stati del lavoro
-
-- `Planned`
-- `Approved`
-- `InProgress`
-- `Completed`
-- `Closed`
-- `Suspended`
-- `Cancelled`
-
-### Assegnazione del fornitore
-
-L’associazione tra lavoro e fornitore avviene tramite `assignContractorToWork`.
+* `createContractor(tokenId, ...)`
+* `setContractorActive(tokenId, ...)`
 
 ---
 
-## Registro cronologico degli eventi
+## Lavori
 
-Ogni azione rilevante genera un **Registry Event**, garantendo la tracciabilità completa della vita del condominio.
+Ogni intervento è un `WorkItem`.
 
-### Struttura logica di un evento
+### Struttura
 
-Ogni evento contiene:
-
-- `eventId`
-- `tokenId`
-- `relatedResolutionId`
-- `relatedWorkId`
-- `eventType`
-- `timestamp`
-- `category`
-- `title`
-- `dataURI`
-- `dataHash`
-- `createdBy`
-
-### Tipologie di evento
-
-- `AssembleaConvocata`
-- `VerbalePubblicato`
-- `DeliberaPubblicata`
-- `BilancioPubblicato`
-- `FornitoreSelezionato`
-- `LavoriAvviati`
-- `LavoriConclusi`
-- `ContestazioneAperta`
-- `ContestazioneChiusa`
-- `AmministratoreAggiornato`
-
-Gli eventi possono essere creati manualmente dall’amministratore o automaticamente dal contratto.
+* `workId`
+* `tokenId`
+* `resolutionId` (opzionale)
+* `contractorId` (stesso condominio)
+* `title`
+* `category`
+* `workType`
+* `status`
+* date pianificate e reali
 
 ---
 
-## Lifecycle del condominio
+## Eventi
 
-### Fase 1 - Setup piattaforma
+Ogni azione genera un evento.
 
-1. ChainIntegrate deploya il contratto.
-2. ChainIntegrate autorizza uno o più creator.
+### Struttura
 
-### Fase 2 - Creazione del condominio
-
-1. Il creator autorizzato minta il token LSP8.
-2. Il token viene assegnato all’amministratore del condominio.
-3. Vengono registrati nome e ubicazione.
-
-### Fase 3 - Gestione operativa
-
-1. L’amministratore crea le delibere.
-2. Vengono pianificati i lavori.
-3. I fornitori vengono assegnati.
-4. Gli stati dei lavori vengono aggiornati.
-5. Gli eventi vengono registrati nel tempo.
-
-### Fase 4 - Trasferimento dell’amministrazione
-
-1. L’amministratore trasferisce il token a un nuovo amministratore.
-2. Il contratto registra automaticamente l’evento `AmministratoreAggiornato`.
-
-### Fase 5 - Disattivazione del condominio
-
-L’amministratore può impostare lo stato del condominio come inattivo tramite `setCondominiumActive`.
+* `eventId`
+* `tokenId`
+* `eventType`
+* `timestamp`
+* `category`
+* `title`
+* `dataURI`
+* `dataHash`
+* `createdBy`
 
 ---
 
-## Wallet supportati
+## Lifecycle
 
-Il contratto è progettato per funzionare con:
+### Setup
 
-- **Universal Profile LUKSO**
-- account compatibili con **ERC725Y**
+1. Deploy contratto
+2. Autorizzazione creator
 
-Questo garantisce:
+### Creazione
 
-- integrazione con i flussi di governance LUKSO
-- gestione sicura delle autorizzazioni
-- interoperabilità con l’ecosistema esistente
+1. Mint condominio
+2. Assegnazione admin
 
----
+### Operatività
 
-## Cosa resta off-chain
+1. Creazione delibere
+2. Creazione fornitori (V2)
+3. Creazione lavori
+4. Assegnazione fornitori
+5. Aggiornamento stato lavori
+6. Registrazione eventi
 
-Il contratto salva solo la **traccia essenziale on-chain**.
+### Trasferimento
 
-Resta off-chain:
+* cambio amministratore
+* evento automatico
 
-- documenti assembleari
-- bilanci e rendiconti
-- contratti con fornitori
-- descrizioni dettagliate dei lavori
-- eventuali allegati e PDF
-- fotografie e documentazione tecnica
+### Disattivazione
 
-Tali informazioni sono referenziate tramite `dataURI` e `dataHash`.
-
----
-
-## Cosa resta fuori dal contratto
-
-Le seguenti logiche non sono gestite on-chain nella V1:
-
-- gestione delle votazioni assembleari
-- calcolo dei millesimi
-- gestione della contabilità condominiale
-- workflow approvativi complessi
-- notifiche e comunicazioni ai condomini
-- gestione dei pagamenti
-
-Queste funzionalità possono essere implementate a livello di UI o backend off-chain.
+* tramite `setCondominiumActive`
 
 ---
 
-## Obiettivi della UI
+## Architettura dati
 
-La UI dovrà consentire almeno queste operazioni:
-
-### lato ChainIntegrate
-- autorizzare/revocare creator
-- registrare e gestire fornitori
-
-### lato creator
-- mintare un nuovo condominio
-
-### lato amministratore
-- vedere i dati del condominio
-- creare e consultare delibere
-- pianificare e gestire lavori
-- assegnare fornitori
-- registrare eventi
-- trasferire l’amministrazione
-- attivare/disattivare il condominio
-
-### lato consultazione
-- visualizzare lo storico delle delibere
-- visualizzare lo storico dei lavori
-- visualizzare il registro cronologico degli eventi
+* **on-chain:** stato e relazioni
+* **off-chain:** documenti e contenuti
 
 ---
 
-## Sintesi finale
+## Off-chain
 
-Il Condominium Registry System è un modello in cui:
+* documenti assembleari
+* contratti
+* bilanci
+* allegati
+* media
 
-- il condominio è rappresentato da un token LSP8 unico
-- l’identità è definita da un identificativo `bytes32`
-- ChainIntegrate gestisce la governance del contratto
-- i creator autorizzati possono creare nuovi condomini
-- l’amministratore controlla la gestione operativa
-- i fornitori sono registrati e associati ai lavori
-- ogni evento rilevante è tracciato on-chain
-- i documenti sono gestiti tramite un modello ibrido on-chain/off-chain
-- il sistema è progettato per l’integrazione con Universal Profile
+---
 
-Questo costituisce la base funzionale per costruire:
+## Fuori scope
 
-- smart contract
-- UI operativa
-- JSON schema
-- backend di supporto
-- consultazione del registro del condominio
+* votazioni
+* millesimi
+* contabilità
+* pagamenti
+* notifiche
+
+---
+
+## Obiettivi UI
+
+### ChainIntegrate
+
+* gestione creator
+
+### Creator
+
+* mint condominio
+
+### Amministratore
+
+* gestione completa sistema
+
+### Consultazione
+
+* storico completo
+
+---
+
+## Compatibilità
+
+* Universal Profile
+* ERC725Y
+* ecosistema LUKSO
+
+---
+
+## 📜 Legacy (V1)
+
+### Differenza principale
+
+* fornitori globali
+* gestiti dal contract owner
+
+### Limite
+
+* modello centralizzato
+* non aderente alla realtà dei condomini
+
+### Evoluzione
+
+V2 introduce:
+
+* isolamento per condominio
+* gestione decentralizzata
+* modello più realistico
+
+---
+
+## Sintesi
+
+Sistema in cui:
+
+* ogni condominio = token LSP8
+* governance distribuita
+* fornitori per-condominio
+* tracciabilità completa
+* modello ibrido dati
+
+Base per:
+
+* smart contract evoluti
+* UI operativa
+* backend
+* sistemi di audit
