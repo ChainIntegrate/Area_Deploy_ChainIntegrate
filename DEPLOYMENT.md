@@ -2,6 +2,178 @@
 
 ---
 
+# 🌱 Proof of Farming
+
+**V1 (current)**
+
+## Farm Passport
+
+* **Contract:** `ProofOfFarmingPassport`
+* **Address:** `0x010592c36f35D6fC630E7D8d7E05a480154dDe89`
+* **ChainId:** `4201`
+* **Verified:** ✅ (Standard JSON Input)
+* **Deployed:** `2026-05-09`
+* **Owner (Admin):** Universal Profile  
+  `0x83cBE526D949A3AaaB4EF9a03E48dd862e81472C`
+
+## Event Registry
+
+* **Contract:** `ProofOfFarmingEventRegistry`
+* **Address:** `0xfBbAa65E131aeF9a6Ba73ED88dCe89EFfB8dd10E`
+* **ChainId:** `4201`
+* **Verified:** ✅ (Standard JSON Input)
+* **Deployed:** `2026-05-09`
+* **Linked Farm Passport:**  
+  `0x010592c36f35D6fC630E7D8d7E05a480154dDe89`
+
+---
+
+## 🧠 Model Overview
+
+* **FarmPassport** = on-chain identity of the farm / agricultural company
+* **EventRegistry** = on-chain registry of agricultural events linked to a FarmPassport
+* `farmId = tokenId` of the FarmPassport
+* EventRegistry accepts events only for farms that exist in the FarmPassport contract
+* Events use a hybrid on-chain / off-chain model:
+  * operational details stored off-chain as JSON
+  * integrity anchored on-chain through `dataHash`
+
+---
+
+## 🔗 Contract Linkage
+
+`ProofOfFarmingEventRegistry` is linked to `ProofOfFarmingPassport` through the Passport contract address passed at deployment.
+
+The registry checks:
+
+```solidity
+passport.farmExists(farmId)
+```
+
+and uses:
+
+```solidity
+passport.tokenOwnerOf(farmId)
+```
+
+for farm-owner based authorization.
+
+This ensures that events cannot be registered for non-existing farms and that only the Farm Passport owner or authorized operators can register events.
+
+---
+
+## 👥 Roles
+
+* **Contract owner / admin**
+  * deploys and governs the system
+  * manages validator addresses in the EventRegistry
+
+* **Farm Passport owner**
+  * owns the farm identity token
+  * authorizes farm operators
+
+* **Farm operators**
+  * register agricultural events for a specific farm
+
+* **Validators**
+  * validate or revoke registered events
+
+---
+
+## 🧾 Supported Event Types
+
+* `CropStarted`
+* `SoilWork`
+* `Fertilization`
+* `Treatment`
+* `Irrigation`
+* `Harvest`
+* `SoilAnalysis`
+* `Biodiversity`
+* `Energy`
+* `RecoveredWater`
+* `AgriculturalWaste`
+* `Certification`
+* `Audit`
+* `NonCompliance`
+* `NonComplianceClosed`
+* `BadgeAssigned`
+* `BadgeRevoked`
+* `ScoreUpdated`
+
+---
+
+## ✅ Event Lifecycle
+
+Each event can be:
+
+* `Registered`
+* `Validated`
+* `Revoked`
+
+Intended flow:
+
+```text
+Registered → Validated
+Registered → Revoked
+Validated → Revoked
+```
+
+---
+
+## 🧩 Data Architecture
+
+* Hybrid **on-chain / off-chain**
+* Operational details stored off-chain as JSON
+* Integrity anchored on-chain through:
+  * `eventId`
+  * `farmId`
+  * `plotId`
+  * `dataHash`
+  * `operator`
+  * `timestamp`
+
+---
+
+## 🌱 Designed for
+
+* Agricultural identity
+* Green / bio behavior tracking
+* Anti-greenwashing audit trail
+* Mobile-first farm event registration
+* Hybrid on-chain / off-chain agricultural records
+* Future reputation, badge, and score layer
+
+---
+
+## 🧭 Future Evolution
+
+Proof of Farming V1 intentionally separates identity and events.
+
+Future contract:
+
+* `ProofOfFarmingReputation`
+
+Expected responsibilities:
+
+* score snapshots
+* badge assignment
+* badge revocation
+* temporal validity
+* reputation levels
+* derived evaluation from registered/validated events
+
+Architecture direction:
+
+```text
+FarmPassport = identity
+EventRegistry = behavior
+Reputation = evaluation
+```
+
+---
+
+
 # 🧱 Condominium Registry (V2)
 
 * **Contract:** `CondominiumRegistryLSP8V2`

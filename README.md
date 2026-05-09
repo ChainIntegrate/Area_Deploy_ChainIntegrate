@@ -2,461 +2,233 @@
 
 Repository di sviluppo per smart contract legati a **certificazione, tracciabilità e gestione del ciclo di vita degli asset reali** su blockchain **LUKSO**.
 
-Il progetto utilizza gli standard **LSP (LUKSO Standard Proposals)** e segue un approccio incrementale:  
-ogni contratto rappresenta un’evoluzione controllata di modelli on-chain orientati a:
+Il progetto utilizza gli standard **LSP (LUKSO Standard Proposals)** e segue un approccio incrementale orientato a:
 
-- governance
-- auditabilità
-- privacy by design
-- separazione dei ruoli
-- integrazione con sistemi off-chain
-- rappresentazione del **lifecycle di asset fisici**
+* governance
+* auditabilità
+* privacy by design
+* separazione dei ruoli
+* integrazione con sistemi off-chain
+* lifecycle management di asset fisici
+* identità digitali verificabili
 
 ---
 
-## Scopo
+# Scopo
 
 Fornire una base tecnica per:
 
-- emettere certificati e asset come **identità digitali verificabili**
-- tracciare **eventi, stati e trasformazioni nel tempo**
-- gestire **revoche, sostituzioni e versionamento**
-- modellare **interazioni multi-attore su asset fisici**
-- limitare l’esposizione dei dati sensibili on-chain
-- separare chiaramente:
-  - governance
-  - emissione
-  - operatività
-  - detenzione
+* emettere certificati e asset come identità digitali verificabili
+* tracciare eventi, stati e trasformazioni nel tempo
+* gestire revoche, sostituzioni e versionamento
+* modellare interazioni multi-attore su asset fisici
+* ridurre l’esposizione di dati sensibili on-chain
+* separare governance, emissione, operatività e detenzione
 
-La blockchain viene utilizzata come **registro di verità e audit**, non come database applicativo.
+La blockchain viene utilizzata come:
+
+* registro di verità
+* audit trail
+* layer di integrità
+
+non come database applicativo.
 
 ---
 
-## Asset Lifecycle Model
+# Asset Lifecycle Model
 
-Con l’introduzione di VehiclePassport, il repository evolve da un insieme di contratti di certificazione a un modello più generale:
+Il repository evolve verso un modello generale di:
 
-**asset-centric lifecycle tracking**
+```text
+asset-centric lifecycle tracking
+```
 
 Pattern principali:
 
-- 1 token = 1 asset fisico
-- eventi rappresentati come **record append-only**
-- controllo scrittura delegato dal proprietario
-- separazione tra:
-  - identità dell’asset
-  - dati originari
-  - eventi operativi
-- invalidazione automatica dei permessi su cambio ownership
-- integrazione nativa con:
-  - sistemi off-chain (ERP, officine, supply chain)
-  - UI operative
+* 1 token = 1 asset fisico
+* eventi append-only
+* ownership e governance separate
+* controllo scrittura delegabile
+* modello ibrido on-chain / off-chain
+* integrazione con UI operative e sistemi esterni
 
-Questo pattern è riutilizzabile per:
-- veicoli
-- macchinari industriali
-- componenti critici
-- asset certificati lungo supply chain
----
+Pattern riutilizzabile per:
 
-## Approccio
-
-- Smart contract **LSP8 (Identifiable Digital Asset)**
-- Stato e timeline on-chain
-- Identità e dati sensibili gestiti **off-chain**
-- Riferimenti on-chain tramite **hash crittografici**
-- Logica applicativa e UI off-chain
-- Governance basata su **Universal Profile (UP)**
+* veicoli
+* condomini
+* supply chain
+* componenti industriali
+* identità agricole
+* audit trail green / bio
 
 ---
 
-## Contratti nel repository
+# Approccio
+
+* Smart contract LSP8
+* Timeline e stato on-chain
+* Dati estesi off-chain
+* Hash crittografici on-chain
+* Governance tramite Universal Profile
+* UI e logica applicativa off-chain
 
 ---
 
-### CondominiumRegistry (V2)
+# Contratti nel repository
+
+---
+
+## 🌱 Proof of Farming
+
+Sistema di identità agricola e registrazione eventi agricoli basato su standard LUKSO (LSP8).
+
+Il modello separa:
+
+* identità agricola (`ProofOfFarmingPassport`)
+* eventi operativi (`ProofOfFarmingEventRegistry`)
+* futura reputazione (`ProofOfFarmingReputation`)
+
+Approccio:
+
+* mobile-first
+* hybrid on-chain / off-chain
+* audit trail verificabile
+* anti-greenwashing
+* futura reputazione agricola decentralizzata
+
+Documentazione:
+
+* `proof_of_farming_contractspec.md`
+* `DEPLOYMENT.md`
+
+---
+
+## 🏢 Condominium Registry
 
 Sistema di identità, governance e tracciabilità del ciclo di vita dei condomini basato su standard LUKSO (LSP8).
 
-Non è un semplice NFT descrittivo, ma un modello strutturato che rappresenta:
+Caratteristiche principali:
 
-* identità del condominio
-* amministrazione e governance
-* storico verificabile delle delibere
-* gestione dei lavori e dei fornitori
-* registro cronologico degli eventi
+* 1 token = 1 condominio
+* governance condominiale verificabile
+* storico delibere e lavori
+* gestione fornitori
+* audit trail eventi
+* isolamento per-condominio (V2)
 
----
+Documentazione:
 
-## 🆕 Evoluzione V2
-
-* I fornitori non sono più globali
-* Ogni condominio gestisce il proprio registro fornitori
-* I fornitori sono creati e gestiti **dall’amministratore del condominio**
-* Eliminata la dipendenza dal contract owner per la gestione operativa
+* `CondominiumRegistry_contractspec.md`
+* `DEPLOYMENT.md`
 
 ---
 
-## Modello
+## 🚗 Vehicle Passport
 
-Introduce:
-
-* identificazione univoca del condominio tramite `tokenId` (`bytes32`)
-* mint del token direttamente all’amministratore del condominio (Universal Profile)
-* controllo dei creator autorizzati:
-
-  * definiti dal contract owner (ChainIntegrate)
-  * abilitati al mint di nuovi condomini
-
----
-
-## Governance
-
-* l’amministratore del condominio coincide con `adminUP`
-* trasferimento dell’amministrazione tramite funzione dedicata (`transferAdministration`)
-* possibilità di attivare o disattivare il condominio
-
----
-
-## Delibere
-
-* una delibera per ogni decisione assembleare
-* classificazione tramite `ResolutionCategory`
-* documentazione via `dataURI` + `dataHash`
-* tracciabilità completa di autore e timestamp
-
----
-
-## Fornitori (V2)
-
-* registro **per-condominio (tokenId-based)**
-* ogni fornitore appartiene a un singolo condominio
-* gestione tramite:
-
-  * `createContractor(tokenId, ...)`
-  * `setContractorActive(tokenId, ...)`
-
-Ogni fornitore include:
-
-* `name`
-* eventuale `walletUP`
-* `metadataURI`
-* `active`
-* `createdBy`
-
----
-
-## Lavori
-
-* un `WorkItem` per ogni intervento
-* collegamento opzionale a:
-
-  * delibera
-  * fornitore (dello stesso condominio)
-
-Tipologie:
-
-* `Generic`
-* `FixedTerm` (con data fine pianificata)
-
-Ciclo di vita:
-
-* `Planned`
-* `Approved`
-* `InProgress`
-* `Completed`
-* `Closed`
-* `Suspended`
-* `Cancelled`
-
-Gestione completa di date pianificate e reali.
-
----
-
-## Eventi
-
-* ogni azione genera un `RegistryEvent`
-* eventi automatici o manuali
-* collegamenti a delibere e lavori
-
-Tipologie principali:
-
-* `AssembleaConvocata`
-* `VerbalePubblicato`
-* `DeliberaPubblicata`
-* `BilancioPubblicato`
-* `FornitoreSelezionato`
-* `LavoriAvviati`
-* `LavoriConclusi`
-* `ContestazioneAperta`
-* `ContestazioneChiusa`
-* `AmministratoreAggiornato`
-
----
-
-## Architettura dati
-
-* **on-chain:** stato, relazioni, integrità
-* **off-chain:** documenti e contenuti estesi
-
----
-
-## Access control
-
-* **Contract owner (ChainIntegrate):**
-
-  * autorizza i creator
-
-* **Creator autorizzati:**
-
-  * mintano nuovi condomini
-
-* **Amministratore del condominio:**
-
-  * gestisce fornitori, delibere, lavori ed eventi
-  * trasferisce l’amministrazione
-
----
-
-## Compatibilità
-
-* Universal Profile
-* ERC725Y
-* ecosistema LUKSO
-
----
-
-## 🎯 Obiettivo
-
-Base per un **registro digitale del condominio verificabile**, con:
-
-* governance trasparente
-* tracciabilità completa
-* auditabilità nel tempo
-
----
-
-# 📜 Legacy (V1)
-
-Versione iniziale del contratto.
-
-Differenza principale:
-
-* fornitori gestiti **globalmente dal contract owner**
-* non isolati per condominio
-
-Limite:
-
-* modello non aderente alla struttura reale dei condomini
-
-V2 introduce isolamento e gestione decentralizzata per condominio.
-
-
----
-
-### VehiclePassport
-
-Sistema di certificazione e tracciabilità del ciclo di vita del veicolo basato su standard LUKSO (LSP8).
-
-Non è un semplice NFT descrittivo, ma un modello strutturato che rappresenta:
-
-- identità del veicolo
-- ownership
-- storico operativo verificabile
-
-Introduce:
-
-- identificazione univoca tramite VIN hashato (`tokenId`)
-- metadata originari del veicolo:
-  - gestiti via URI + hash
-  - modificabili solo dall’issuer iniziale
-  - congelabili (`freeze`) in modo definitivo
-- separazione tra:
-  - dati originari del veicolo (issuer-controlled)
-  - record operativi append-only (operator-controlled)
-- sistema di autorizzazioni dinamiche per la scrittura:
-  - `OneShot` (una singola operazione)
-  - `Reusable` (più operazioni)
-- autorizzazioni:
-  - concesse dal proprietario corrente
-  - revocabili
-  - invalidate automaticamente al cambio proprietà tramite `vehicleAuthorizationEpoch`
-- modello record:
-  - un record per intervento rilevante
-  - creato dall’operatore a fine lavoro
-  - immutabile (frozen at creation)
-- struttura record:
-  - `category` (MechanicalRepair, BodyRepair, ecc.)
-  - `cause` (Accident, Wear, Routine, ecc.)
-  - `workStartedAt`, `workCompletedAt`
-  - `odometerKm`
-  - `recordURI` (off-chain)
-  - `recordHash` (integrità)
-- generazione automatica del record:
-  - `OwnershipTransfer` al trasferimento del token
-- modello ibrido:
-  - on-chain → stato, relazioni, integrità
-  - off-chain → contenuto esteso (JSON, documenti, media)
-- compatibilità:
-  - Universal Profile (esperienza avanzata)
-  - wallet EOA standard (interoperabilità)
-
-Costituisce la base per un **libretto digitale del veicolo verificabile**, con controllo in capo al proprietario e piena auditabilità.
-
-
-## Compliance Certificates
-
-### Contratto operativo
-
-- **ComplianceCertificateLSP8REV2**
-
-Contratto di riferimento per l’uso operativo nel dominio della **certificazione di conformità**.
-
-Introduce:
-- freeze dei metadati **per singolo token**
-- stato **Revoked** terminale (non reversibile)
-- supporto a **Superseded** per versionamento dei certificati
-- separazione tra:
-  - metadati del certificato (bloccabili)
-  - stato legale del certificato (sempre tracciabile)
-- freeze indipendente dei metadati di collezione (LSP4 / ERC725Y)
-
-Dettagli di deploy e verifica: vedi `DEPLOYMENT.md`.
-
----
-
-### Versione precedente
-
-- **ComplianceCertificateLSP8 (REV1)**
-
-Prima versione operativa del modello di certificazione.  
-Mantenuta per compatibilità e tracciabilità storica, ma **non più usata come standard**.
-
----
-
-## Battery Carbon Certificates
-
-### Contratto operativo
-
-- **BatteryCarbonCertificateLSP8**
-
-Contratto LSP8 dedicato all’emissione di **certificati di impronta carbonica per batterie**.
+Sistema di certificazione e tracciabilità del ciclo di vita del veicolo.
 
 Caratteristiche principali:
-- 1 token = 1 certificato di lotto
-- `tokenId` derivato da `keccak256(lotCode)`
-- metadati del certificato aggiornabili fino a freeze
-- stato del certificato tracciato on-chain
-- modello multi-attore (issuer, fornitori, logistica, ecc.)
 
-### Modello di emissione e sicurezza
+* 1 token = 1 veicolo
+* `tokenId = keccak256(VIN)`
+* ownership transfer tracking
+* autorizzazioni dinamiche per operatori
+* service records append-only
+* metadata originari congelabili
+* invalidazione automatica permessi su cambio ownership
 
-- l’emissione dei certificati è **vincolata a una allowlist**
-- solo gli **issuer autorizzati** possono mintare nuovi certificati
-- la allowlist è:
-  - on-chain
-  - gestita esclusivamente dal **proprietario del contratto**
-  - amministrata tramite **Universal Profile (UP)**
+Documentazione:
 
-Questo consente di separare in modo netto:
-- **governance del contratto** (UP admin)
-- **soggetti autorizzati all’emissione**
-- **detentori finali dei certificati**
-
-Dettagli di deploy e verifica: vedi `DEPLOYMENT.md`.
+* `VehiclePassport_contractspec.md`
+* `DEPLOYMENT.md`
 
 ---
 
-## Supplier Quality Evaluations
+## 📜 Compliance Certificates
 
-### Contratto operativo
-
-- **SupplierQualityLSP8**
-
-Contratto LSP8 dedicato alla **valutazione qualitativa periodica dei fornitori**.
+Sistema di certificazione di conformità basato su LSP8.
 
 Caratteristiche principali:
-- 1 token = 1 fornitore
-- `tokenId = keccak256("SUP:" + supplierRef)`
-- valutazioni **append-only** (es. semestrali)
-- punteggi strutturati su più criteri:
-  - puntualità
-  - qualità
-  - documentazione
-  - reattività
-- calcolo on-chain di:
-  - ultimo punteggio
-  - media storica
-- identità del fornitore risolta **off-chain** tramite hash mapping
-- nessun dato sensibile in chiaro on-chain
 
-### Ruoli e governance
+* freeze metadata per-token
+* stati `Valid / Revoked / Superseded`
+* lifecycle certificato tracciabile
+* separazione tra metadata e stato legale
+* governance tramite Universal Profile
 
-- **Owner (UP)**: amministrazione del contratto
-- **Quality Office**: mint dei fornitori e inserimento valutazioni
-- **Fornitori**: detentori dei token (read-only)
+Documentazione:
 
-Il contratto è progettato per integrazione diretta con UI di verifica e dashboard di audit.
-
-Dettagli di deploy e verifica: vedi `DEPLOYMENT.md`.  
-Schema dati e scelte architetturali: vedi `contract_spec.md`.
+* `ComplianceCertificate_contractspec.md`
+* `DEPLOYMENT.md`
 
 ---
 
-## Traceability & Conformity Evolution
+## 🔋 Battery Carbon Certificates
 
-### Traceability_test2
+Sistema di certificazione impronta carbonica per lotti batteria.
 
-Iterazione architetturale avanzata del modello di certificazione e tracciabilità.
+Caratteristiche principali:
 
-Non è un semplice prototipo sperimentale, ma una revisione strutturata che ha introdotto:
+* 1 token = 1 lotto
+* modello multi-attore
+* contribution flow off-chain + hash on-chain
+* freeze per-contribution
+* aggregate verification
+* governance separata dai contributor operativi
 
-- gestione esplicita dello stato (`Valid / Revoked / Superseded`)
-- grafo bidirezionale di supersessione
-- separazione tra:
-  - freeze dei dati di conformità
-  - freeze dei metadata LSP4 / ERC725Y
-- governance tramite Universal Profile
+Documentazione:
 
-Il contratto è stato utilizzato per consolidare il modello lifecycle prima della standardizzazione definitiva nel dominio Compliance.
-
-Dettagli di deploy e verifica: vedi `DEPLOYMENT.md`.  
-Schema dati e scelte architetturali: vedi `Traceability_test2_spec.md`.
+* `BatteryCarbonCertificate_contractspec.md`
+* `DEPLOYMENT.md`
 
 ---
 
-### OLD_Traceability_test1
+## 🏭 Supplier Quality Evaluations
 
-Primo prototipo esplorativo del modello di tracciabilità.
+Sistema di valutazione qualitativa fornitori.
 
-Abbandonato in fase iniziale a seguito di criticità progettuali e ripensamento architetturale.
+Caratteristiche principali:
 
-Mantenuto esclusivamente a scopo storico e comparativo.
+* 1 token = 1 fornitore
+* valutazioni append-only
+* score multi-criterio
+* media storica on-chain
+* identità fornitore risolta off-chain
 
+Documentazione:
+
+* `SupplierQuality_contractspec.md`
+* `DEPLOYMENT.md`
 
 ---
 
-## Stato del progetto
+## 🔄 Traceability & Conformity Evolution
 
-* ✔️ Battery Compliance Certificates deployato, verificato e con UI operativa su LUKSO Testnet
+Area repository dedicata alle iterazioni architetturali e all’evoluzione dei modelli di tracciabilità e conformità.
 
-* ✔️ Supplier Traceability & Quality Evaluations deployato, verificato e con UI operativa
+Include:
 
-* ✔️ Vehicle Passport deployato, verificato e con UI operativa
+* `Traceability_test2`
+* `OLD_Traceability_test1`
 
+Documentazione:
+
+* `Traceability_test2_spec.md`
+* `DEPLOYMENT.md`
+
+---
+
+# Stato del progetto
+
+* ✔️ Battery Compliance Certificates deployato e verificato
+* ✔️ Supplier Quality Evaluations deployato e verificato
+* ✔️ Vehicle Passport deployato e verificato
 * ✔️ Condominium Registry V1 deployato e verificato
-
-* ✔️ Condominium Registry V2 deployato e verificato (fornitori per-condominio)
-
-* ⏳ UI Condominium Registry in fase di rilascio
-
+* ✔️ Condominium Registry V2 deployato e verificato
+* ✔️ Proof of Farming V1 deployato e verificato
 * ✔️ Governance basata su Universal Profile
-
 * ✔️ Modello dati ibrido (on-chain + off-chain)
-
-* ✔️ Architettura orientata a tracciabilità e auditabilità
-
+* ✔️ Architettura orientata a lifecycle tracking e auditabilità
+* ⏳ Evoluzione reputation layer e UI operative avanzate
 
 ---
-
